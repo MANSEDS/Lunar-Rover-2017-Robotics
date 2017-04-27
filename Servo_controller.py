@@ -25,12 +25,12 @@ servo_duty_cycles = [[2,12], [], [], [], []]
 
 
 def degree_converter(servo_number, degree, max_degree):
-    duty_cycle_limits = servo_duty_cycles[servo_number]
-    duty_cycle_range = 10#duty_cycle_limits[2] - duty_cycle_limits[1]
+    duty_cycle_limits = servo_duty_cycles[servo_number-1]
+    duty_cycle_range = duty_cycle_limits[1] - duty_cycle_limits[0]
     if max_degree == 180:
-        desired_duty_cycle = degree * duty_cycle_range / 180 + 2#duty_cycle_limits[1]
+        desired_duty_cycle = degree * duty_cycle_range / 180 + duty_cycle_limits[0]
     elif max_degree ==360:
-        desired_duty_cycle = degree * duty_cycle_range / 360 + 2#duty_cycle_limits[1]
+        desired_duty_cycle = degree * duty_cycle_range / 360 + duty_cycle_limits[0]
     else:
         raise ValueError('Maximum degree not equal to 180 or 360')
     return desired_duty_cycle
@@ -42,7 +42,3 @@ def servo_controller(servo_number, degree):
     servo_instance(servo_number).start(dc)
 
 
-while True:
-    for i in range(0,180):
-        #time.sleep(1)
-        servo_controller(1, i)
