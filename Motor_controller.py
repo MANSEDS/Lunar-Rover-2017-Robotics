@@ -1,48 +1,66 @@
-# Controller for Motors in the MANSEDS Lunar Rover
-# Author: Ethan Ramsay
-
-# Import dependencies
-import RPi.GPIO as GPIO
-from scipy.constants import pi as pi
 
 
-# Set GPIO pin configuration
-GPIO.setmode(GPIO.BOARD)
-
-
-# Declare motor pins
-motor_pwm_pins = []
-motor_hilo_pins = [[][][][]]
-GPIO.setup(motor_pins, GPIO.OUT)
-
-
-# Define motor instance
-def motor_instance(motor_number):
-    motor_inst(motor_number) = GPIO.PWM(motor_pwm_pins[motor_number], 50)
-
-
-# Define motor angular velocity control
-motor_duty_cycles = [[],[]]
+# System variables
+wheel_diameter = 0.12 # m
+pi = 3.14159
 max_rpm = 26
-max_ang_vel = max_rpm * 2 * pi #rad/s
-wheel_diameter = 0.1 #m
+max_ang_vel = max_rpm * pi / 30 # rad/s
+
+# Calculate angular velocity for desired velocity
+def calc_des_ang_vel(v):
+    des_ang_vel = 2 * v / wheel_diameter # rad/s
+    if des_ang_vel > max_ang_vel:
+        if overdrive:
+            des_ang_vel = max_ang_vel
+            print("Desired velocity exceeds maximum velocity, velocity set to maximum due to" + \
+                                "overdrive, extended use of overdrive is not recommended")
+        else:
+            des_ang_vel = max_ang_vel * 0.9
+    elif des_ang_vel >= 0.9 * max_ang_vel:
+        if not overdrive:
+            des_ang_vel = 0.9 * max_ang_vel
+    return des_ang_vel
 
 
-def velocity_converter(motor_number, velocity):
-  duty_cycle_limits = motor_duty_cycles[motor_number]
-  duty_cycle_range = duty_cycle_limits[1] - duty_cycle_limits[0]
-  desired_ang_vel = wheel_diameter*pi
-  desired_duty_cycle = desired_ang_vel/max_ang_vel*duty_cycle_range+duty_cycle_limits[0]
-  return desired_duty_cycle
+def calc_dc(dc_min, dc_max, des_ang_vel):
+    dc_range = dc_max - dc_min
+    inter = dc_range * des_ang_vel / max_ang_vel
+    dc = dc_min + inter
+    return dc
 
 
-#Define speed controller
-def velocity_controller(motor_number, velocity):
-    motor_instance(motor_number)
-    dc = velocity_converter(motor_number, velocity)
-    return motor_instance(motor_number).start(dc)
+if __name__ == "__main__":
+
+    import argparse
+
+    # Arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("v", help="Velocity")
+    parser.add_argument("dc_min", help="Minimum Duty Cycle")
+    parser.add_argument("dc_max", help="Maximum Duty Cycle")
+    parser.add_argument("--od", help="Overdrive Enable")
+    args = parser.parse_args()
+    v = float(args.v)
+    dc_min = float(args.dc_min)
+    dc_max = float(args.dc_max)
+    if args.od:
+        overdrive = True
+        print("Overdrive enabled, not recommended for extended durations")
+    else:
+        overdrive = False
+
+    # Calculate angular velocity for desired velocity
+    des_ang_vel = calc_des_ang_vel(v)
+    print("Desired angular velocity is: "+str(des_ang_vel))
 
 
-def motor_brake:
-    for motor in motor_pins:
-        motor_instance(motor)
+    # Calculate interpolated duty cycle
+    dc_range = dc_max - dc_min
+    inter = dc_range * des_ang_vel / max_ang_vel
+    dc = dc_min + inter
+    print("Required duty cycle is: "+str(dc))
+
+else:
+    des_ang_vel = calc_des_ang_vel(v)
+    dc = calc_dc
+    print(dc)

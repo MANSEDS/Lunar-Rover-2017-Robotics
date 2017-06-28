@@ -1,43 +1,42 @@
-# Controller for Servos in the MANSEDS Lunar Rover
-# Author: Ethan Ramsay
-
-# Import dependencies
-import RPi.GPIO as GPIO
-from scipy.constants import pi as pi
-
-
-# Set GPIO pin configuration
-GPIO.setmode(GPIO.BOARD)
+# System variables
+wheel_diameter = 0.12 # m
+pi = 3.14159
+max_rpm = 26
+max_ang_vel = max_rpm * pi / 30 # rad/s
 
 
-# Declare servo pins
-servo_pins = [12]
-GPIO.setup(servo_pins, GPIO.OUT)
+def calc_dc(dc_min, dc_max, angle):
+    dc_range = dc_max - dc_min
+    inter = dc_range * angle / 180
+    dc = dc_min + inter
+    return dc
 
 
-# Define servo instance
-def servo_instance(servo_number):
-    servo_instance(servo_number) = GPIO.PWM(servo_pins[servo_number], 50)
+if __name__ == "__main__":
 
+    import argparse
 
-# Define degree converter
-servo_duty_cycles = [[5, 10], [], [], [], [], [], []]
-
-
-def degree_converter(servo_number, degree, max_degree):
-    duty_cycle_limits = servo_duty_cycles[servo_number]
-    duty_cycle_range = duty_cycle_limits[1] - duty_cycle_limits[0]
-    if max_degree == 180:
-        desired_duty_cycle = degree * duty_cycle_range / 180 + duty_cycle_limits[1]
-    elif max_degree ==360:
-        desired_duty_cycle = degree * duty_cycle_range / 180 + duty_cycle_limits[1]
+    # Arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("a", help="Angle (Degrees)")
+    parser.add_argument("dc_min", help="Minimum Duty Cycle")
+    parser.add_argument("dc_max", help="Maximum Duty Cycle")
+    args = parser.parse_args()
+    a = float(args.a)
+    dc_min = float(args.dc_min)
+    dc_max = float(args.dc_max)
+    if args.od:
+        overdrive = True
+        print("Overdrive enabled, not recommended for extended durations")
     else:
-        raise ValueError('Maximum degree not equal to 180 or 360')
-    return desired_duty_cycle
+        overdrive = False
 
 
-# Define servo controller
-def servo_controller(servo_number, degree, max degree):
-    servo_instance(servo_number)
-    dc = degree_converter(servo_number,degree, max_degree)
-    return servo_instance(servo_number).start(dc)
+    # Calculate interpolated duty cycle
+    dc = calc_dc(dc_min, dc_max, a)
+    print("Required duty cycle is: "+str(dc))
+
+else:
+    des_ang_vel = calc_des_ang_vel(v)
+    dc = calc_dc
+    print(dc)

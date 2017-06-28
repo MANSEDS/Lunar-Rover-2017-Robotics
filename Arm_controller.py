@@ -1,71 +1,92 @@
-# Controller for Robotic Arm of MANSEDS Lunar Rover
-# Author: Ethan Ramsay
-
-# Import dependencies
+import argparse
 import RPi.GPIO as GPIO
-from scipy.constants import pi as pi
-import time
-from Servo_controller import servo_controller
+
+
+# Arguments
+parser = argparse.ArgumentParser()
+g = parser.add_mutually_exclusive_group(required=True)
+ge = g.add_mutually_exclusive_group()
+ge.add_argument("-e", "--extend", help="Extend arm", action="store_true")
+ge.add_argument("-s", "--stow", help="Stow arm", action="store_true")
+gp = g.add_mutually_exclusive_group()
+gp.add_argument("-z", "--height", help="Position gripper - height")
+gp.add_argument("-r", "--radius", help="Position gripper - radius")
+gp.add_argument("-t", "--theta", help="Position gripper - theta")
+gg = g.add_mutually_exclusive_group()
+gg.add_argument("-g", "grip", help="Grip", action="store_true")
+gg.add_argument("-d", "drop", help="Release grip", action="store_true")
+args = parser.parse_args()
+e = args.extend
+s = args.stow
+z = args.height
+r = args.radius
+t = args.theta
+g = args.grip
+d = args.drop
+
 
 # System variables
-max_z = 0
-min_z = 0
-max_r = 0
-min_r = 0
-max_t = 360
-min_t = 0
-# determine rest angle (base servo)
-# determine neutral angle (base servo)
-# determine safe height (gripper)
+pwm_arm = [0, 0, 0, 0, 0, 0] # Arm servo PWM pins
+pwm_grip = [0, 0] # Gripper servo PWM pins
+dc_limits_arm = [[0 100], [0 100], [0 100], [0 100], [0 100], [0 100]]
+dc_limits_grip = [[0 100], [0 100]]
+servo_insts = []
 
 
+# GPIO setup
+GPIO.setmode(GPIO.BOARD)
 
-# Functions for extending and stowing arm
-def extend:
-    # turn base to appropriate position (Neutral Angle)
 
-    # raise gripper above height of all rover mounted systems (Safe height)
+def GPIO_grip():
+    for pin in pwm_grip:
+        servo_insts.append(GPIO.PWM(pin, 50))
 
-    # half extend to a neutral position
 
+def GPIO_arm():
+    for pin in pwm_arm:
+        servo_insts.append(GPIO.PWM(pin, 50))
+
+
+# Control functions
+def extend():
     pass
 
 
-def stow:
-    # raise gripper above height of all rover mounted systems (Safe height)
-    # turn base to appropriate position (Neutral Angle)
-    # stow arm
-    # rotate base to rest position (Rest Angle)
-    pass
-
-# Functions for positioning the gripper
-def rposition(r):
-    if r > r_max or r < r_min:
-        raise ValueError('Desired radial position outside of system range')
+def stow():
     pass
 
 
-def tposition(t):
-    i = 0
-    while t > t_max:
-        t = t - 360
-        i++
-        if i >10:
-            break
+def position(dim, mag):
     pass
 
 
-def zposition(z):
-    if z > z_max or z < z_min:
-        raise ValueError('Desired height outside of system range')
-    pass
+def grip():
+    for i in range(0,2,1):
+        servo_insts[i].start(duty_limits_grip[i[1]])
 
 
-# Functions for gripping/releasing samples
-def grip:
-    gripper_servo_number = 7
-    return servo_controller(gripper_servo_number, 180, 180)
+def drop():
+    for i in range(0,2,1):
+        servo_insts[i].start(duty_limits_grip[i[0]])
 
-def release:
-    gripper_servo_number = 7
-    return servo_controller(gripper_servo_number, 0, 180)
+
+# Main
+if (e or s):
+    GPIO_arm()
+    if e:
+        extend()
+    elif s:
+        stow()
+elif (z or r or t):
+    GPIO_arm()
+    pass # inverse kinematics
+elif (g or d):
+    GPIO_grip()
+    if g:
+        grip()
+    elif d:
+        drop()
+
+
+# GPIO clean up
+GPIO.cleanup()

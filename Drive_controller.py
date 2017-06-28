@@ -1,40 +1,193 @@
-# Drive controller for the MANSEDS Lunar Rover Project
-# Author: Ethan Ramsay
-
-# Import dependencies
-from . import Motor_controller
+import argparse
+import RPi.GPIO as GPIO
 import time
-from scipy.constants import pi as pi
+
+
+# Arguments
+parser = argparse.ArgumentParser()
+g = parser.add_mutually_exclusive_group(required=True)
+gd = g.add_mutually_exclusive_group()
+gd.add_argument("-f", "--forward", help="Drive forwards", action="store_true")
+gd.add_argument("-b", "--backwards", help="Drive backwards", action="store_true")
+gt = g.add_mutually_exclusive_group()
+gt.add_argument("-l", "--left", help="Turn left", action="store_true")
+gt.add_argument("-r", "--right", help="Turn right", action="store_true")
+parser.add_argument("-v", "--velocity", help="Drive velocity (m/s)")
+parser.add_argument("-d", "--duration", help="Drive duration (s)")parser.add_argument("-d", "--duration", help="Drive duration (s)")
+parser.add_argument("-od", "--overdrive", help="Enable overdrive", action="store_true")
+parser.add_argument("-a", "--angle", help="Turn Angle (Degrees)")
+args = parser.parse_args()
+f = args.forward
+b = args.backwards
+l = args.left
+r = args.right
+v = args.velocity
+d = args.duration
+overdrive = args.overdrive
+a = args.angle
 
 
 # System variables
-wheel_base = 200 #mm ?Guess - needs precise measurement?
-tyre_diameter = 80 #mm ?Guess - needs precise value?
+pi = 3.14159
+wheel_diameter = 0.12 # m
+wheel_width = 0.06 # m
+axle_diameter = 0.0254 # m
+axle_length = 0.14 # m ????
+wheel_base = 0.1524 # m
+max_rpm = 26.0
+max_ang_vel = max_rpm * pi / 30 # rad/s
+motor_pwm_pins = [0, 0, 0, 0]
+motor_hilo_pins = [[0, 0], [0, 0], [0, 0], [0, 0]]
+motor_dc_limits = [[0, 100], [0, 100], [0, 100], [0, 100]]
+motor_insts = []
 
 
-# Define steering control
-def steering_control(degree):
-    m0 = motor_instance(0)
-    m1 = motor_instance(1)
-    turn_velocity = 0
-    # maths to calculate time duration to achieve desired turn angle
-    # circle of diameter = distance between midlines of tyre banks
-    turning_circle_circumference = wheel_base * pi
-    # vehicle moves around circle 1 tyre circumference per revolution
-    tyre_circumference = pi * tyre_diameter
-    #
-    # look at wheel radius, velocity
-    turn_time =
-    velocity_controller(0, -turn_velocity)
-    velocity_controller(1, turn_velocity)
-    time.wait(turn_time)
+# GPIO setup
+GPIO.setmode(GPIO.BOARD)
+for i in range(0, 4, 1):
+    motor_insts.append(GPIO.PWM(motor_pwm_pins[i], 50))
 
 
-# Define drive control
-def drive_control(velocity, distance):
-    m0 = motor_instance(0)
-    m1 = motor_instance(1)
-    drive_time = distance / velocity
-    velocity_controller(0, velocity)
-    velocity_controller(1, velocity)
-    time.wait(drive_time)
+def GPIO_forward():
+    for i in range(0, 4, 1):
+        GPIO.output(motor_hilo_pins[i[0]], 1)
+            GPIO.output(motor_hilo_pins[i[1]], 0)
+
+
+def GPIO_backwards():
+    for i in range(0,4,1):
+        GPIO.output(motor_hilo_pins[i[1]], 1)
+            GPIO.output(motor_hilo_pins[i[0]], 0)
+
+
+def GPIO_left():
+    for i in range(0,4,2):
+        GPIO.output(motor_hilo_pins[i[0]], 1)
+            GPIO.output(motor_hilo_pins[i[1]], 0)
+    for i in range(1,4,2):
+        GPIO.output(motor_hilo_pins[i[1]], 1)
+            GPIO.output(motor_hilo_pins[i[0]], 0)
+
+
+def GPIO_right():
+    for i in range(0,4,2):
+        GPIO.output(motor_hilo_pins[i[1]], 1)
+            GPIO.output(motor_hilo_pins[i[0]], 0)
+    for i in range(1,4,2):
+        GPIO.output(motor_hilo_pins[i[0]], 1)
+            GPIO.output(motor_hilo_pins[i[1]], 0)
+
+
+# Calculate angular velocity for desired velocity
+def calc_des_ang_vel(v):
+    des_ang_vel = 2 * v / wheel_diameter # rad/s
+    if des_ang_vel > max_ang_vel:
+        if overdrive:
+            des_ang_vel = max_ang_vel
+            print("Desired velocity exceeds maximum velocity, velocity set to maximum due to" + \
+                                "overdrive, extended use of overdrive is not recommended")
+        else:
+            des_ang_vel = max_ang_vel * 0.9
+    elif des_ang_vel >= 0.9 * max_ang_vel:
+        if not overdrive:
+            des_ang_vel = 0.9 * max_ang_vel
+    return des_ang_vel
+
+
+# Calculate duty cycle for velocity
+def calc_dc(dc_min, dc_max, des_ang_vel):
+    dc_range = dc_max - dc_min
+    inter = dc_range * des_ang_vel / max_ang_vel
+    dc = dc_min + inter
+    return dc
+
+
+# Calculate duty cycle for turning at 80% of max velocity
+def turn_dc(dc_min, dc_max):
+    dc_range = dc_max - dc_min
+    inter = dc_range * 0.8
+    dc = dc_min + inter
+    return dc
+
+
+# Calculate time to turn by desired angle at 80% of max velocity
+def turn_time(a):
+    # Calculate turning diameter,d, using pythagarus
+    l1 = (axle_length + wheel_width) / 2 # m
+    l2 = (axle_diameter + wheel_base) / 2 # m
+    d = (l1 ** 2 + l2 ** 2) ** (0.5) # m
+    # Calculate angle turned through 1 revolution of tyres
+    th = (d / wheel_diameter) * 360 # degrees
+    # Calculate number of revolutions to turn by desired angle
+    n = a / th # revs
+    # Calculate revs/s of wheel at 80% max velocity
+    om = max_rpm * 0.8 / 60
+    # Calculate turn time
+    t = n / om
+    return t
+
+
+# Main control
+if (f or b):
+    if (v and d):
+        des_ang_vel = calc_des_ang_vel(v)
+        if f:
+            GPIO_forward()
+            for i in range(0,4,1):
+                dc = calc_dc(motor_dc_limits[i[0]], motor_dc_limits[i[1]], des_ang_vel)
+                m = motor_insts[i]
+                m.start(dc)
+            time.sleep(d)
+            for i in range(0, 4, 1):
+                m = motor_insts[i]
+                m.stop()
+        elif b:
+            if f:
+                GPIO_backwards()
+                for i in range(0,4,1):
+                    dc = calc_dc(motor_dc_limits[i[0]], motor_dc_limits[i[1]], des_ang_vel)
+                    m = motor_insts[i]
+                    m.start(dc)
+                time.sleep(d)
+                for i in range(0, 4, 1):
+                    m = motor_insts[i]
+                    m.stop()
+    else:
+        print("Please specify velocity AND duration of travel")
+elif (l or r):
+    if a:
+        while a > 360:
+            a -= 360
+            i++
+            if i > 10:
+                print("Specify an angle between 0 and 360 degrees")
+                break
+
+        t = turn_time(a)
+        if l:
+            GPIO_left()
+            for i in range(0,4,1):
+                dc = turn_dc(motor_dc_limits[i[0]], motor_dc_limits[i[1]], des_ang_vel)
+                m = motor_insts[i]
+                m.start(dc)
+            time.sleep(t)
+            for i in range(0, 4, 1):
+                m = motor_insts[i]
+                m.stop()
+        elif b:
+            if r:
+                GPIO_right()
+                for i in range(0,4,1):
+                    dc = turn_dc(motor_dc_limits[i[0]], motor_dc_limits[i[1]], des_ang_vel)
+                    m = motor_insts[i]
+                    m.start(dc)
+                time.sleep(t)
+                for i in range(0, 4, 1):
+                    m = motor_insts[i]
+                    m.stop()
+    else:
+        print("Please specify angle of turn (degrees)")
+
+
+# GPIO clean up
+GPIO.cleanup()
