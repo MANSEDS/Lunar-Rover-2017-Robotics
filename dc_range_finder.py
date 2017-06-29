@@ -16,10 +16,10 @@ args = parser.parse_args()
 m = args.motor
 s = args.servo
 l = args.linact
-pwm_pin = args.PWM
-f = args.frequency
-hi = args.high
-lo = args.low
+pwm_pin = int(args.PWM)
+f = int(args.frequency)
+hi = int(args.high)
+lo = int(args.low)
 
 
 # GPIO setup
@@ -33,7 +33,7 @@ def GPIO_motor(hi, lo):
 def dc_range_finder(inst):
     inst.start(0)
     for dc in range(1, 101, 1):
-        inst.Change_Duty_Cycle(dc)
+        inst.ChangeDutyCycle(dc)
         print(dc)
         time.sleep(2)
     inst.stop()
