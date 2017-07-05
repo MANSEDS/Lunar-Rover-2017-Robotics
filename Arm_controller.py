@@ -1,5 +1,15 @@
+# MANSEDS Lunar Rover -- Servo Controller
+# Author: Ethan Ramsay
+
+
+# Import dependencies
 import argparse
 import RPi.GPIO as GPIO
+import logging
+
+
+# Logging config
+logging.basicConfig(filename='arm.log', level=logging.DEBUG)
 
 
 # Arguments
@@ -18,9 +28,9 @@ gg.add_argument("-d", "drop", help="Release grip", action="store_true")
 args = parser.parse_args()
 e = args.extend
 s = args.stow
-z = args.height
-r = args.radius
-t = args.theta
+z = float(args.height)
+r = float(args.radius)
+t = int(args.theta)
 g = args.grip
 d = args.drop
 
@@ -35,14 +45,17 @@ servo_insts = []
 
 # GPIO setup
 GPIO.setmode(GPIO.BOARD)
+# requires command to set pwm pins to output
 
 
 def GPIO_grip():
+    GPIO.setup(pwm_grip, GPIO.OUT)
     for pin in pwm_grip:
         servo_insts.append(GPIO.PWM(pin, 50))
 
 
 def GPIO_arm():
+    GPIO.setup(pwm_arm, GPIO.OUT)
     for pin in pwm_arm:
         servo_insts.append(GPIO.PWM(pin, 50))
 

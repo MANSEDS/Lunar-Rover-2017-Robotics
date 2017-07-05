@@ -1,6 +1,16 @@
+# MANSEDS Lunar Rover -- Drive Controller
+# Author: Ethan Ramsay
+
+
+# Import dependencies
 import argparse
 import RPi.GPIO as GPIO
 import time
+import logging
+
+
+# Logging config
+logging.basicConfig(filename='drive.log', level=logging.DEBUG)
 
 
 # Arguments
@@ -21,10 +31,10 @@ f = args.forward
 b = args.backwards
 l = args.left
 r = args.right
-v = args.velocity
-d = args.duration
+v = float(args.velocity)
+d = float(args.duration)
 overdrive = args.overdrive
-a = args.angle
+a = int(args.angle)
 
 
 # System variables
@@ -45,37 +55,44 @@ motor_insts = []
 # GPIO setup
 GPIO.setmode(GPIO.BOARD)
 for i in range(0, 4, 1):
+    GPIO.setup(motor_pwm_pins, GPIO.OUT)
     motor_insts.append(GPIO.PWM(motor_pwm_pins[i], 50))
 
 
 def GPIO_forward():
     for i in range(0, 4, 1):
+        GPIO.setup(motor_hilo_pins[i], GPIO.OUT)
         GPIO.output(motor_hilo_pins[i[0]], 1)
-            GPIO.output(motor_hilo_pins[i[1]], 0)
+        GPIO.output(motor_hilo_pins[i[1]], 0)
 
 
 def GPIO_backwards():
     for i in range(0,4,1):
+        GPIO.setup(motor_hilo_pins[i], GPIO.OUT)
         GPIO.output(motor_hilo_pins[i[1]], 1)
-            GPIO.output(motor_hilo_pins[i[0]], 0)
+        GPIO.output(motor_hilo_pins[i[0]], 0)
 
 
 def GPIO_left():
     for i in range(0,4,2):
+        GPIO.setup(motor_hilo_pins[i], GPIO.OUT)
         GPIO.output(motor_hilo_pins[i[0]], 1)
-            GPIO.output(motor_hilo_pins[i[1]], 0)
+        GPIO.output(motor_hilo_pins[i[1]], 0)
     for i in range(1,4,2):
+        GPIO.setup(motor_hilo_pins[i], GPIO.OUT)
         GPIO.output(motor_hilo_pins[i[1]], 1)
-            GPIO.output(motor_hilo_pins[i[0]], 0)
+        GPIO.output(motor_hilo_pins[i[0]], 0)
 
 
 def GPIO_right():
     for i in range(0,4,2):
+        GPIO.setup(motor_hilo_pins[i], GPIO.OUT)
         GPIO.output(motor_hilo_pins[i[1]], 1)
-            GPIO.output(motor_hilo_pins[i[0]], 0)
+        GPIO.output(motor_hilo_pins[i[0]], 0)
     for i in range(1,4,2):
+        GPIO.setup(motor_hilo_pins[i], GPIO.OUT)
         GPIO.output(motor_hilo_pins[i[0]], 1)
-            GPIO.output(motor_hilo_pins[i[1]], 0)
+        GPIO.output(motor_hilo_pins[i[1]], 0)
 
 
 # Calculate angular velocity for desired velocity

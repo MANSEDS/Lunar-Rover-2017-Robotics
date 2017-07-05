@@ -1,3 +1,6 @@
+# MANSEDS Lunar Rover -- Duty Cycle Range Finder
+# Author: Ethan Ramsay
+
 import argparse
 import RPi.GPIO as GPIO
 import time
@@ -24,6 +27,7 @@ lo = int(args.low)
 
 # GPIO setup
 GPIO.setmode(GPIO.BOARD)
+GPIO.setup(pwm, GPIO.OUT)
 inst = GPIO.PWM(pwm_pin, f)
 def GPIO_motor(hi, lo):
     GPIO.output(hi, 1)
