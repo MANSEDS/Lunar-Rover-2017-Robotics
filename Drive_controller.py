@@ -26,6 +26,8 @@ parser.add_argument("-v", "--velocity", help="Drive velocity (m/s)")
 parser.add_argument("-d", "--duration", help="Drive duration (s)")parser.add_argument("-d", "--duration", help="Drive duration (s)")
 parser.add_argument("-od", "--overdrive", help="Enable overdrive", action="store_true")
 parser.add_argument("-a", "--angle", help="Turn Angle (Degrees)")
+
+# Parse arguments
 args = parser.parse_args()
 f = args.forward
 b = args.backwards
@@ -35,6 +37,8 @@ v = float(args.velocity)
 d = float(args.duration)
 overdrive = args.overdrive
 a = int(args.angle)
+logging.debug("Arguments parsed: f=%s, b=%s, l=%s, r=%s, v=%s, d=%s, od=%s, a=%s", + \
+                    f, b, l, r, v, d, od, a)
 
 
 # System variables
@@ -42,21 +46,23 @@ pi = 3.14159
 wheel_diameter = 0.12 # m
 wheel_width = 0.06 # m
 axle_diameter = 0.0254 # m
-axle_length = 0.14 # m ????
+axle_length = 0.14 # m
 wheel_base = 0.1524 # m
 max_rpm = 26.0
 max_ang_vel = max_rpm * pi / 30 # rad/s
 motor_pwm_pins = [0, 0, 0, 0]
+motor_channels = [8, 9, 10, 11]
 motor_hilo_pins = [[0, 0], [0, 0], [0, 0], [0, 0]]
 motor_dc_limits = [[0, 100], [0, 100], [0, 100], [0, 100]]
+motor_pl_limits = [[0, 4095], [0, 4095], [0, 4095], [0, 4095]]
 motor_insts = []
 
 
 # GPIO setup
 GPIO.setmode(GPIO.BOARD)
-for i in range(0, 4, 1):
-    GPIO.setup(motor_pwm_pins, GPIO.OUT)
-    motor_insts.append(GPIO.PWM(motor_pwm_pins[i], 50))
+# for i in range(0, 4, 1):
+#     GPIO.setup(motor_pwm_pins, GPIO.OUT)
+#     motor_insts.append(GPIO.PWM(motor_pwm_pins[i], 50))
 
 
 def GPIO_forward():
@@ -95,6 +101,12 @@ def GPIO_right():
         GPIO.output(motor_hilo_pins[i[1]], 0)
 
 
+# Adafruit setup
+pwm = Adafruit_PCA9685.PCA9685()
+pwm.set_pwm_freq(60)
+logging.debug('Set Adafruit pwm freq to 60')
+
+
 # Calculate angular velocity for desired velocity
 def calc_des_ang_vel(v):
     des_ang_vel = 2 * v / wheel_diameter # rad/s
@@ -116,7 +128,17 @@ def calc_dc(dc_min, dc_max, des_ang_vel):
     dc_range = dc_max - dc_min
     inter = dc_range * des_ang_vel / max_ang_vel
     dc = dc_min + inter
+    logging.debug("Calculated required duty cycle for desired angular velocity: %s", dc)
     return dc
+
+
+# Calculate pulse length for velocity
+def calc_pl(pl_min, pl_max, des_ang_vel):
+    pl_range = servo_max - servo_min
+    inter = pl_range * des_ang_vel / max_ang_vel
+    pl = pl_min + inter
+    logging.debug("Calculated required pulse length for desired angular velocity: %s", pl)
+    return pl
 
 
 # Calculate duty cycle for turning at 80% of max velocity
@@ -151,24 +173,30 @@ if (f or b):
         if f:
             GPIO_forward()
             for i in range(0,4,1):
-                dc = calc_dc(motor_dc_limits[i[0]], motor_dc_limits[i[1]], des_ang_vel)
-                m = motor_insts[i]
-                m.start(dc)
+                # dc = calc_dc(motor_dc_limits[i[0]], motor_dc_limits[i[1]], des_ang_vel)
+                # m = motor_insts[i]
+                # m.start(dc)
+                pl = calc_pl((motor_pl_limits[i[0]], motor_pl_limits[i[1]], des_ang_vel))
+                pwm.set_pwm(motor_channels[i], 0, pl)
             time.sleep(d)
             for i in range(0, 4, 1):
-                m = motor_insts[i]
-                m.stop()
+                # m = motor_insts[i]
+                # m.stop()
+                pwm.set_pwm(motor_channels[i], 0, 0)
         elif b:
             if f:
                 GPIO_backwards()
                 for i in range(0,4,1):
-                    dc = calc_dc(motor_dc_limits[i[0]], motor_dc_limits[i[1]], des_ang_vel)
-                    m = motor_insts[i]
-                    m.start(dc)
+                    # dc = calc_dc(motor_dc_limits[i[0]], motor_dc_limits[i[1]], des_ang_vel)
+                    # m = motor_insts[i]
+                    # m.start(dc)
+                    pl = calc_pl((motor_pl_limits[i[0]], motor_pl_limits[i[1]], des_ang_vel))
+                    pwm.set_pwm(motor_channels[i], 0, pl)
                 time.sleep(d)
                 for i in range(0, 4, 1):
-                    m = motor_insts[i]
-                    m.stop()
+                    # m = motor_insts[i]
+                    # m.stop()
+                    pwm.set_pwm(motor_channels[i], 0, 0)
     else:
         print("Please specify velocity AND duration of travel")
 elif (l or r):
@@ -184,24 +212,30 @@ elif (l or r):
         if l:
             GPIO_left()
             for i in range(0,4,1):
-                dc = turn_dc(motor_dc_limits[i[0]], motor_dc_limits[i[1]], des_ang_vel)
-                m = motor_insts[i]
-                m.start(dc)
+                # dc = calc_dc(motor_dc_limits[i[0]], motor_dc_limits[i[1]], des_ang_vel)
+                # m = motor_insts[i]
+                # m.start(dc)
+                pl = calc_pl((motor_pl_limits[i[0]], motor_pl_limits[i[1]], des_ang_vel))
+                pwm.set_pwm(motor_channels[i], 0, pl)
             time.sleep(t)
             for i in range(0, 4, 1):
-                m = motor_insts[i]
-                m.stop()
+                # m = motor_insts[i]
+                # m.stop()
+                pwm.set_pwm(motor_channels[i], 0, 0)
         elif b:
             if r:
                 GPIO_right()
                 for i in range(0,4,1):
-                    dc = turn_dc(motor_dc_limits[i[0]], motor_dc_limits[i[1]], des_ang_vel)
-                    m = motor_insts[i]
-                    m.start(dc)
+                    # dc = calc_dc(motor_dc_limits[i[0]], motor_dc_limits[i[1]], des_ang_vel)
+                    # m = motor_insts[i]
+                    # m.start(dc)
+                    pl = calc_pl((motor_pl_limits[i[0]], motor_pl_limits[i[1]], des_ang_vel))
+                    pwm.set_pwm(motor_channels[i], 0, pl)
                 time.sleep(t)
                 for i in range(0, 4, 1):
-                    m = motor_insts[i]
-                    m.stop()
+                    # m = motor_insts[i]
+                    # m.stop()
+                    pwm.set_pwm(motor_channels[i], 0, 0)
     else:
         print("Please specify angle of turn (degrees)")
 
