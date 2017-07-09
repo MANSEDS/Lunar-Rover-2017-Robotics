@@ -1,0 +1,14 @@
+<!--
+MANSEDS Lunar Rover -- Robotic Arm: Unified Robot Description
+Author: Ethan Ramsay
+-->
+<robot name="arm">
+    <link name="chassis"/>
+    <link name="base_plate"/>
+    <link name="upper_arm"/>
+    <link name="lower_arm"/>
+    <link name="hand"/>
+
+    
+
+</robot>

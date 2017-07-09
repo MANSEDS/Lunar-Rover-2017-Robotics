@@ -15,6 +15,9 @@ logging.basicConfig(filename='drive.log', level=logging.DEBUG)
 
 # Arguments
 parser = argparse.ArgumentParser()
+
+
+# Command arguments
 g = parser.add_mutually_exclusive_group(required=True)
 gd = g.add_mutually_exclusive_group()
 gd.add_argument("-f", "--forward", help="Drive forwards", action="store_true")
@@ -22,6 +25,9 @@ gd.add_argument("-b", "--backwards", help="Drive backwards", action="store_true"
 gt = g.add_mutually_exclusive_group()
 gt.add_argument("-l", "--left", help="Turn left", action="store_true")
 gt.add_argument("-r", "--right", help="Turn right", action="store_true")
+
+
+# Optional arguments
 parser.add_argument("-v", "--velocity", help="Drive velocity (m/s)")
 parser.add_argument("-d", "--duration", help="Drive duration (s)")parser.add_argument("-d", "--duration", help="Drive duration (s)")
 parser.add_argument("-od", "--overdrive", help="Enable overdrive", action="store_true")

@@ -1,4 +1,4 @@
-# MANSEDS Lunar Rover -- Servo Controller
+# MANSEDS Lunar Rover -- Arm Controller
 # Author: Ethan Ramsay
 
 
@@ -24,7 +24,6 @@ ge.add_argument("-e", "--extend", help="Extend arm", action="store_true")
 ge.add_argument("-s", "--stow", help="Stow arm", action="store_true")
 gp = g.add_mutually_exclusive_group()
 gp.add_argument("-p", "--position", help="Gripper Position Vector")
-gp.add_argument("-t", "--theta", help="Position gripper - theta")
 gg = g.add_mutually_exclusive_group()
 gg.add_argument("-g", "grip", help="Grip", action="store_true")
 gg.add_argument("-d", "drop", help="Release grip", action="store_true")
@@ -58,7 +57,7 @@ full_release_dc = 13 # Gripper dc at fully open position
 
 
 # GPIO setup
-GPIO.setmode(GPIO.BOARD)
+GPIO.setmode(GPIO.BCM)
 
 
 def GPIO_arm(pwm_arm):
