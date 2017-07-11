@@ -22,8 +22,10 @@ s = args.servo
 l = args.linact
 pwm_pin = int(args.PWM)
 f = int(args.frequency)
-hi = int(args.high)
-lo = int(args.low)
+if (args.high and args.low):
+    hi = int(args.high)
+    lo = int(args.low)
+
 
 
 # GPIO setup

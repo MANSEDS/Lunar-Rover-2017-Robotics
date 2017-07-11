@@ -99,6 +99,7 @@ def calc_pl(pl_min, pl_max, angle):
     inter = pl_range * angle / 180
     pl = pl_min + inter
     logging.debug("Calculated required pulse length for desired angular velocity: %s", pl)
+    pl = int(pl)
     return pl
 
 

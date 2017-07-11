@@ -99,12 +99,12 @@ if __name__ = "__main__":
     g = parser.add_mututally_exclusive_group(required=True)
     gh = g.add_mututally_exclusive_group()
     gv = g.add_mututally_exclusive_group()
-    g.add_argument("-s", "--scoop", help="Scoop up")
-    g.add_argument("", "", help="")
-    gh.add_argument("-u", "--up", help="Vertically up")
-    g.add_argument("", "", help="")
-    gv.add_argument("-f", "--forward")
-    g.add_argument("", "", help="")
+    g.add_argument("-s", "--scoop", help="Scoop up", action="store_true")
+    g.add_argument("-e", "--empty", help="Empty scoop", action="store_true")
+    gh.add_argument("-u", "--up", help="Position scoop vertically up", action="store_true")
+    g.add_argument("-d", "--down", help="Position scoop vertically up", action="store_true")
+    gv.add_argument("-f", "--forward", action="store_true")
+    g.add_argument("-b", "", help="--backwards", action="store_true")
 
     # Optional arguments
 

@@ -90,6 +90,7 @@ if __name__ == "__main__":
 
     # Calculate interpolated pulse length
     pl = calc_pl(pl_min, pl_max, a)
+    pl = int(pl)
 
     # Actuate servo
     # GPIO_set(pin, dc)
