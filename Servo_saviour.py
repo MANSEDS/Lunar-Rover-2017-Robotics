@@ -6,15 +6,17 @@ import Adafruit_PCA9685
 
 
 # Retrieve last servo channel and current pulse length from servo log
-with open(servo.log) as log:
+with open("servo.log") as log:
+    line = None
     penult = None
     last = None
     for last in (line for line in log if line.rstrip('\n')):
         penult = last
         last = line
-channel = int(penult.split(":0")[1])
-pl_init = int(last.split(": ")[1])
-
+channel = int(penult.split(": ")[0])
+pl_init = int(last.split(": ")[0])
+print(channel)
+print(pl_init)
 
 # Adafruit setup
 pwm = Adafruit_PCA9685.PCA9685()

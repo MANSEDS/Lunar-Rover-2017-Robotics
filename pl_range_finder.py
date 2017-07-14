@@ -20,17 +20,18 @@ args = parser.parse_args()
 m = args.motor
 s = args.servo
 l = args.linact
-pwm_pin = int(args.PWM)
+channel = int(args.channel)
 f = int(args.frequency)
 if (args.high and args.low):
     hi = int(args.high)
     lo = int(args.low)
 
 
-
 # GPIO setup
-GPIO.setmode(GPIO.BOARD)
+GPIO.setmode(GPIO.BCM)
 def GPIO_motor(hi, lo):
+    GPIO.setup(hi, GPIO.OUT)
+    GPIO.setup(lo, GPIO.OUT)
     GPIO.output(hi, 1)
     GPIO.output(lo, 0)
 

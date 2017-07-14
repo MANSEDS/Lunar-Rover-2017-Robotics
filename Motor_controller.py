@@ -22,6 +22,9 @@ motor = 0
 
 
 # GPIO setup/functions/cleanup
+GPIO.setmode(GPIO.BCM)
+
+
 def GPIO_set(pwm, dc):
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(pwm, GPIO.OUT)
@@ -66,10 +69,11 @@ def calc_dc(dc_min, dc_max, des_ang_vel):
 
 
 def calc_pl(pl_min, pl_max, des_ang_vel):
-    pl_range = servo_max - servo_min
+    pl_range = pl_max - pl_min
     inter = pl_range * des_ang_vel / max_ang_vel
     pl = pl_min + inter
     logging.debug("Calculated required pulse length for desired angular velocity: %s", pl)
+    pl = int(pl)
     return pl
 
 
@@ -80,7 +84,7 @@ if __name__ == "__main__":
     # Arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("v", help="Velocity (m/s)")
-    parser.add_argument("t", hgelp="Operation time (s)")
+    parser.add_argument("t", help="Operation time (s)")
 
     # Arguments for direct GPIO control from Pi
     parser.add_argument("hi", help="High Pin No. (BOARD)")
@@ -133,9 +137,9 @@ if __name__ == "__main__":
 
     # Setup Motor HiLo pins
     GPIO.setup(hi, GPIO.OUT)
-    GPIO.output(1)
+    GPIO.output(hi, 1)
     GPIO.setup(lo, GPIO.OUT)
-    GPIO.output(0)
+    GPIO.output(lo, 0)
 
 
     # Activate motor through GPIO
@@ -146,7 +150,7 @@ if __name__ == "__main__":
 
     # Activate motor through Adafruit PWM hat
     pwm.set_pwm(channel, 0, pl)
-    time.wait(t)
+    time.sleep(t)
     pwm.set_pwm(channel, 0, 0)
 
 
