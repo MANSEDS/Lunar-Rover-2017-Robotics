@@ -82,6 +82,7 @@ if __name__ == "__main__":
     pl_min = float(args.pl_min)
     pl_max = float(args.pl_max)
     channel = int(args.channel)
+    logging.debug("Channel: %s", channel)
 
 
     # Calculate interpolated duty cycle
