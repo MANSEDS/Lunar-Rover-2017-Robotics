@@ -14,7 +14,7 @@ import Adafruit_PCA9685
 
 
 # Logging config
-logging.basicConfig(filename='servo.log', level=logging.DEBUG)
+logging.basicConfig(filename='servo.log', level=logging.WARNING)
 
 # System variables
 pi = 3.14159
@@ -51,7 +51,7 @@ def calc_pl(pl_min, pl_max, angle):
     pl_range = pl_max - pl_min
     inter = pl_range * angle / 180
     pl = pl_min + inter
-    logging.debug("Calculated required pulse length for desired angle: %s", pl)
+    logging.warning("Pulse length: %s", int(pl))
     return pl
 
 
@@ -83,6 +83,8 @@ if __name__ == "__main__":
     pl_max = float(args.pl_max)
     channel = int(args.channel)
     print(channel)
+    logging.warning("Channel: %s", channel)
+
 
     # Calculate interpolated duty cycle
     # dc = calc_dc(dc_min, dc_max, a)
@@ -91,6 +93,8 @@ if __name__ == "__main__":
     # Calculate interpolated pulse length
     pl = calc_pl(pl_min, pl_max, a)
     pl = int(pl)
+    logging.debug("Pulse length: %s", pl)
+
 
     # Actuate servo
     # GPIO_set(pin, dc)
