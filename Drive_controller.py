@@ -12,7 +12,13 @@ import logging
 # Logging config
 logging.basicConfig(filename='drive.log', level=logging.DEBUG)
 # Set index
-
+if os.path.isfile("/var/www/html/drive.dat"):
+    with open("/var/www/html/drive.dat", "r") as handle:
+        lines = handle.readlines()
+        try:
+            index = int(lines[-1].split()[0]) + 1
+        except TypeError:
+            index = 1
 
 
 # Arguments
@@ -235,8 +241,8 @@ elif (l or r):
                 pl, per = calc_pl((motor_pl_limits[i[0]], motor_pl_limits[i[1]], des_ang_vel))
                 pwm.set_pwm(motor_channels[i], 0, pl)
                 with open("/var/www/html/drive.dat", "a+") as handle:
-                    handle.write("{} {} {}".format(index, 0, per))
-                logging.warning("{} {} {}".format(index, 0, per))
+                    handle.write("{} {} {}".format(index, 0, a))
+                logging.warning("{} {} {}".format(index, 0, a))
                 index += 1
             time.sleep(t)
             for i in range(0, 4, 1):
@@ -254,8 +260,8 @@ elif (l or r):
                     pwm.set_pwm(motor_channels[i], 0, pl)
                     per = - per
                     with open("/var/www/html/drive.dat", "a+") as handle:
-                        handle.write("{} {} {}".format(index, 0, per))
-                    logging.warning("{} {} {}".format(index, 0, per))
+                        handle.write("{} {} {}".format(index, 0, a))
+                    logging.warning("{} {} {}".format(index, 0, a))
                     index += 1
                 time.sleep(t)
                 for i in range(0, 4, 1):
