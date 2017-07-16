@@ -1,0 +1,323 @@
+<!doctype HTML>
+<html>
+  <head>
+    <title>Lunar Rover - Control Interface</title>
+    <meta charset="utf-8" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        width: 100vw;
+        font-size: 0;
+      }
+
+      .control-holder {
+        width: 33.3333vw;
+        height: 100vh;
+        display: inline-block;
+
+        position: absolute;
+
+        font-size: 16px;
+        font-family: "Courier New";
+      }
+      .control-holder > h1 {
+        font-size: 2em;
+        margin-left: 1.1em;
+      }
+
+      #command-queue-live {
+        background-color: #FFDDCC;
+      }
+      #command-queue-staging {
+        background-color: #FFEECC;
+        margin-left: 33.3333vw;
+      }
+      #command-palette {
+        background-color: #FFFFCC;
+        margin-left: 66.6666vw;
+      }
+
+      .queue-holder {
+        font-size: 0.8em;
+      }
+      #queue {
+        list-style-type: none;
+      }
+      #queue .section {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #000;
+
+        display: inline-block;
+        min-width: 150px;
+      }
+      #queue .name {
+        font-size: 1.1em;
+        color: #222;
+
+        display: inline-block;
+        min-width: 125px;
+      }
+      #queue i,
+      #queue b {
+        color: #444;
+      }
+
+      #emergency-stop {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+
+        background-color: red;
+        border-radius: 6px;
+        border: darkred 1px solid;
+
+        width: 90px;
+        height: 40px;
+        line-height: 40px;
+        text-align: center;
+
+        font-weight: bold;
+        font-size: 1.3em;
+      }
+      #emergency-stop:hover {
+        background-color: lightcoral;
+        cursor: pointer;
+      }
+
+      /* Tab System */
+      .tab {
+          overflow: hidden;
+          /*border: 1px solid #ccc;*/
+          background-color: #e6ffcc;
+      }
+      .tab button {
+          background-color: inherit;
+          float: left;
+          border: none;
+          outline: none;
+          cursor: pointer;
+          padding: 14px 16px;
+          transition: 0.3s;
+          font-size: 1.2em;
+      }
+      button::-moz-focus-inner {
+        border: 0;
+      }
+      .tab button:hover {
+          background-color: #daffb3;
+      }
+      .tab button.active {
+          background-color: #cdff99;
+      }
+      .tabcontent {
+          display: none;
+          padding: 6px 12px;
+          /*border: 1px solid #ccc;
+          border-top: none;*/
+      } 
+    </style>
+    <script>
+        function retrieveData() {
+          $.ajax({
+            url: "action_acquisition.php"
+          }).done(function(data) {
+            data = JSON.stringify([
+              {
+                section: 1,
+                id: 1,
+                args: [
+                  1,
+                  2
+                ]
+              },
+              {
+                section: 3,
+                id: 1,
+                args: []
+              },
+              {
+                section: 2,
+                id: 1,
+                args: []
+              }
+            ]);
+
+            var parsed_data = JSON.parse(data);
+            
+            var commandsHTML = [];
+
+            parsed_data.forEach(function(command) {
+              var sectionName = "";
+              var commandName = "";
+              var commandArgs = [];
+              
+              // Get data for motor commands.
+              function handleMotors() {
+                switch (command.id) {
+                  case 1:
+                    commandName = "Forward";
+                    commandArgs.push([ "velocity", command.args[0] ]);
+                    commandArgs.push([ "duration", command.args[1] ]);
+                    break;
+                  case 2:
+                    commandName = "Reverse";
+                    commandArgs.push([ "velocity", command.args[0] ]);
+                    commandArgs.push([ "duration", command.args[1] ]);
+                    break;
+                  case 3:
+                    commandName = "Left";
+                    commandArgs.push([ "angle", command.args[0] ]);
+                    break;
+                  case 4:
+                    commandName = "Right";
+                    commandArgs.push([ "angle", command.args[0] ]);
+                    break;
+                }
+              }
+
+              // Get data for arm commands.
+              function handleArm() {
+                switch (command.id) {
+                  case 1:
+                    commandName = "Stow";
+                    break;
+                  case 2:
+                    commandName = "Extend";
+                    break;
+                  case 3:
+                    commandName = "Go To Ice Box";
+                    break;
+                  case 4:
+                    commandName = "Grip";
+                    break;
+                  case 5:
+                    commandName = "Release";
+                    break;
+                  case 6:
+                    commandName = "Arm Go To";
+                    commandArgs.push([ "position", command.args[0] ]);
+                    if (command.args.length == 2) {
+                      commandArgs.push([ "orientation", command.args[1] ]);
+                    }
+                    break;
+                  case 7:
+                    commandName = "Gripper Orient";
+                    commandArgs.push([ "orientation", command.args[0] ]);
+                    break;
+                }
+              }
+
+              // Get data for camera commands.
+              function handleCamera() {
+                switch (command.id) {
+                  case 1:
+                    commandName = "Pan";
+                    break;
+                  case 2:
+                    commandName = "Go To";
+                    commandArgs.push([ "angle", command.args[0] ]);
+                    break;
+                }
+              }
+
+              // Determine which section this command belongs to.
+              switch (command.section) {
+                case 1:
+                  sectionName = "Motors";
+                  handleMotors();
+                  break;
+                case 2:
+                  sectionName = "Arm";
+                  handleArm();
+                  break;
+                case 3:
+                  sectionName = "Forward Camera";
+                  handleCamera();
+                  break;
+                case 4:
+                  sectionName = "Rear Camera";
+                  handleCamera();
+                  break;
+              }
+
+              // Convert command to HTML.
+              var commandHTML = "";
+              commandHTML += "<span class=\"section\">" + sectionName + "</span> ";
+              commandHTML += "<span class=\"name\">" + commandName + "</span> ";
+              commandArgs.forEach(function(argument) {
+                commandHTML += "<i>" + argument[0] + "</i> " + "<b>" + argument[1] + "</b> ";
+              });
+              commandsHTML.push(commandHTML);
+            });
+
+            var queueHTML = "<ul id=\"queue\">";
+            commandsHTML.forEach(function(commandHTML) {
+              queueHTML += "<li>" + commandHTML + "</li>";
+            });
+            queueHTML += "</ul>";
+
+            document.getElementById("live-queue-holder").innerHTML = queueHTML; 
+
+            setTimeout(function() { retrieveData(); }, 500);
+          });
+        }
+
+        retrieveData();
+
+        function openTab(evt, tabName) {
+          var i, tabcontent, tablinks;
+
+          // Get all elements with class="tabcontent" and hide them
+          tabcontent = document.getElementsByClassName("tabcontent");
+          for (i = 0; i < tabcontent.length; i++) {
+              tabcontent[i].style.display = "none";
+          }
+
+          // Get all elements with class="tablinks" and remove the class "active"
+          tablinks = document.getElementsByClassName("tablinks");
+          for (i = 0; i < tablinks.length; i++) {
+              tablinks[i].className = tablinks[i].className.replace(" active", "");
+          }
+
+          // Show the current tab, and add an "active" class to the button that opened the tab
+          document.getElementById(tabName).style.display = "block";
+          evt.currentTarget.className += " active";
+        } 
+    </script>
+  </head>
+  <body>
+    <div class="control-holder" id="command-queue-live">
+      <h1>Live Commands</h1>
+      <div id="live-queue-holder" class="queue-holder"></div>
+      <div id="emergency-stop">STOP</div>
+    </div>
+    <div class="control-holder" id="command-queue-staging">
+      <h1>Staged Commands</h1>
+      <div id="staging-queue-holder" class="queue-holder"></div>
+    </div>
+    <div class="control-holder" id="command-palette">
+      <h1>Command Palette</h1>
+      <div id="command-palette-holder">
+         <div class="tab">
+          <button class="tablinks" onclick="openTab(event, 'Motors')">Motors</button>
+          <button class="tablinks" onclick="openTab(event, 'Arm')">Arm</button>
+          <button class="tablinks" onclick="openTab(event, 'Cameras')">Cameras</button>
+        </div>
+
+        <div id="Motors" class="tabcontent">
+          <p>TODO: Add controls...</p>
+        </div>
+
+        <div id="Arm" class="tabcontent">
+          <p>TODO: Add controls...</p>
+        </div>
+
+        <div id="Cameras" class="tabcontent">
+          <p>TODO: Add controls...</p>
+        </div> 
+      </div>
+    </div>
+  </body>
+</html>

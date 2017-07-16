@@ -94,9 +94,10 @@ if __name__ == "__main__":
     pl = int(pl)
 
     # Actuate servo
-    # GPIO_set(pin, dc)
-    # GPIO_clear()
-    pwm.set_pwm(channel, 0, pl)
+    while True:
+        # GPIO_set(pin, dc)
+        # GPIO_clear()
+        pwm.set_pwm(channel, 0, pl)
 
 else:
     dc = calc_dc(dc_min, dc_max, a)

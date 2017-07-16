@@ -1,0 +1,193 @@
+<!doctype HTML>
+<html>
+  <head>
+    <title>Lunar Rover - Telemetry View</title>
+    <meta charset="utf-8" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+      }
+
+      .telemetry-holder {
+        width: 100vw;
+        height: 50vh;
+        font-size: 0;
+      }
+
+      .camera {
+        width: 33.3333vw;
+        height: 50vh;
+        display: inline-block;
+        font-size: 16px;
+        position: absolute;
+      }
+      .camera > span {
+        font-size: 2em;
+        font-family: "Courier New";
+      }
+      #camera-1 {
+        background-color: #CCFFFF;
+      }
+      #camera-2 {
+        background-color: #CCFFDD;
+        margin-left: 33.3333vw;
+      }
+      #thermal-1 {
+        background-color: #FFFFEE;
+        margin-left: 66.6666vw;
+      }
+
+      .data {
+        width: 25vw;
+        height: 50vh;
+        display: inline-block;
+        position: absolute;
+      }
+      #drive {
+        background-color: #A79AFF;
+      }
+      #arm {
+        background-color: #85E3FF;
+        margin-left: 25vw;
+      }
+      #orientation {
+        background-color: #E7FFAC;
+        margin-left: 50vw;
+      }
+      #temperatures {
+        background-color: #FFABAB;
+        margin-left: 75vw;
+      }
+
+      #temp-graph {
+        margin-top: 10vh;
+      }
+    </style>
+    <script>
+      (function() {
+        var graphs_updatable = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+          setUpGraphs();
+          graphs_updatable = true;
+
+          function prepCameraFeed(feedId) {
+            var feed = document.getElementById(feedId);
+            
+            var feedUrl = "http://" + location.host + feed.alt
+            feed.src = feedUrl;
+            feed.alt = feedUrl;
+          }
+
+          prepCameraFeed("camera-feed-1");
+          prepCameraFeed("camera-feed-2");
+          prepCameraFeed("thermal-feed");
+        });
+
+        var temp_graph_ctx;
+        var temp_graph_cpu_data      = [];
+        var temp_graph_gpu_data      = [];
+        var temp_graph_inertial_data = [];
+        
+        function setUpGraphs() {
+          temp_graph_ctx = document.getElementById("temp-graph").getContext("2d");
+        }
+
+        function updateGraphs(data) {
+          if (!graphs_updatable) return;
+
+          temp_graph_cpu_data.push(data["rpi_temps"]["cpu"]);
+          temp_graph_gpu_data.push(data["rpi_temps"]["gpu"]);
+          temp_graph_inertial_data.push(data["inertial"]["temp"]);
+
+          new Chart(temp_graph_ctx, {
+            type: "line",
+            data: {
+              labels: [ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" ],
+              datasets: [
+                {
+                  label: "CPU Temp",
+                  backgroundColor: "rgba(255, 0, 0, 0.55)",
+                  data: temp_graph_cpu_data.slice(Math.max(temp_graph_cpu_data.length - 10, 0))
+                },
+                {
+                  label: "GPU Temp",
+                  backgroundColor: "rgba(0, 255, 0, 0.55)",
+                  data: temp_graph_gpu_data.slice(Math.max(temp_graph_gpu_data.length - 10, 0))
+                },
+                {
+                  label: "Inertial Temp",
+                  backgroundColor: "rgba(0, 0, 255, 0.55)",
+                  data: temp_graph_inertial_data.slice(Math.max(temp_graph_inertial_data.length - 10, 0))
+                }
+              ],
+            },
+            options: {
+              animation: {
+                  duration: 0,
+              },
+              hover: {
+                  animationDuration: 0,
+              },
+              responsiveAnimationDuration: 0,
+              scales: {
+                  yAxes: [{
+                      display: true,
+                      ticks: {
+                          suggestedMin: 42,
+                          suggestedMax: 52
+                      }
+                  }]
+              }
+            }
+          });
+        }
+
+        function retrieveData(num = 0) {
+          $.ajax({
+            url: "data_acquisition.php",
+            data: {
+              start_index_for_inemo: num
+            }
+          }).done(function(data) {
+            var ind = num;
+            var parsed_data = JSON.parse(data);
+
+            updateGraphs(parsed_data);
+            console.log(parsed_data);
+
+            setTimeout(function() { retrieveData(ind); }, 500);
+          });
+        }
+
+        retrieveData();
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="telemetry-holder">
+      <div class="camera" id="camera-1">
+        <span>Forward Camera</span>
+        <img id="camera-feed-1" alt=":8080/?action=stream" width="100%" height="auto">
+      </div>
+      <div class="camera" id="camera-2">
+        <span>Rear Camera</span>
+        <img id="camera-feed-2" alt=":8090/?action=stream" width="100%" height="auto">
+      </div>
+      <div class="camera" id="thermal-1">
+        <span>Thermal Sensor</span>
+        <img id="thermal-feed" alt=":8100/?action=stream" width="100%" height="auto">
+      </div>
+    </div>
+    <div class="telemetry-holder">
+      <div class="data" id="drive"></div>
+      <div class="data" id="arm"></div>
+      <div class="data" id="orientation"></div>
+      <div class="data" id="temperatures">
+        <canvas id="temp-graph"></canvas>
+      </div>
+    <div>
+  </body>
+</html>

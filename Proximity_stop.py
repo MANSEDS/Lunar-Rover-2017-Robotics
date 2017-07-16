@@ -19,7 +19,7 @@ motor_hilo_pins= [[0, 0], [0, 0], [0, 0], [0, 0]]
 
 
 # Set index from last line of proximity log
-with open(proximity.log) as log:
+with open("proximity.log") as log:
     last = None
     for last in (line for line in log if line.rstrip('\n')):
         last = line
@@ -52,4 +52,3 @@ def warn():
 if __name__ == "__main__":
     GPIO.add_event_detect(near_pins, GPIO.FALLING, callback=stop)
     GPIO.add_event_detect(far_pins, GPIO.FALLING, callback=warn)
-    

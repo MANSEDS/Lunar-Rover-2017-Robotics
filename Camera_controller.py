@@ -82,8 +82,9 @@ def pan(servo_chan, servo_pl_limits):
     for i in range(servo_pl_limits[0], servo_pl_limits[1]+1, 16):
         pwm.set_pwm(servo_chan, 0, i)
         time.wait(0.005)
-    for i in range(servo_pl_limits[1], servo_pl_limits[0]-1, -16):
-        pwm.set_pwm(servo_chan, 0, i)
+    for i in range(servo_pl_limits[0], servo_pl_limits[1]+1, 16):
+        pl = servo_pl_limits[1] - i
+        pwm.set_pwm(servo_chan, 0, pl)
         time.wait(0.005)
 
 
@@ -122,11 +123,13 @@ if __name__ = "__main__":
 
     if p:
         # pan_GPIO(servo, servo_pwm, servo_dc_limits)
-        pan(servo_chan, servo_pl_limits)
+        while True:
+            pan(servo_chan, servo_pl_limits)
 
     elif m:
         if a:
             # move_GPIO(servo, servo_pwm, servo_dc_limits, a)
-            move(servo_chan, servo_pl_limits, a)
+            while True:
+                move(servo_chan, servo_pl_limits, a)
         else:
             print("Specify desired camera angle")
