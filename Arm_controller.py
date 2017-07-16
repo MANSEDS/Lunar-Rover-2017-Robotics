@@ -25,8 +25,8 @@ ge.add_argument("-s", "--stow", help="Stow arm", action="store_true")
 gp = g.add_mutually_exclusive_group()
 gp.add_argument("-p", "--position", help="Gripper Position Vector")
 gg = g.add_mutually_exclusive_group()
-gg.add_argument("-g", "grip", help="Grip", action="store_true")
-gg.add_argument("-d", "drop", help="Release grip", action="store_true")
+gg.add_argument("-g", "--grip", help="Grip", action="store_true")
+gg.add_argument("-d", "--drop", help="Release grip", action="store_true")
 args = parser.parse_args()
 e = args.extend
 s = args.stow
@@ -40,14 +40,14 @@ logging.debug("Arguments parsed: e=%s, s=%s, z=%s, r=%s, t=%s, g=%s, d=%s", + \
 # System variables
 channel_arm = [0, 1, 2, 3, 4] # Arm servo PWM channels
 channel_grip = [5, 6] # Gripper servo PWM channels
-pl_limits_arm = [[0 4095], [0 4095], [0 4095], [0 4095], [0 4095], [0 4095]] # Arm servo pl limits
-pl_limits_grip = [[0 4095], [0 4095]] # Gripper servo pulse length limits
+pl_limits_arm = [[0, 4095], [0, 4095], [0, 4095], [0, 4095], [0, 4095], [0, 4095]] # Arm servo pl limits
+pl_limits_grip = [[0, 4095], [0, 4095]] # Gripper servo pulse length limits
 full_grip_pl = 2000 # Guestimate????
 full_release_pl = 4095 # Guestimate?????
 pwm_arm = [0, 0, 0, 0, 0] # Arm servo PWM pins
 pwm_grip = [0, 0] # Gripper servo PWM pins
-dc_limits_arm = [[0 13], [0 13], [0 13], [0 13], [0 13], [0 13]] # Arm servo pl limits
-dc_limits_grip = [[0 13], [0 13]] # Gripper servo pulse length limits
+dc_limits_arm = [[0, 13], [0, 13], [0, 13], [0, 13], [0, 13], [0, 13]] # Arm servo pl limits
+dc_limits_grip = [[0, 13], [0, 13]] # Gripper servo pulse length limits
 full_grip_dc = 7 # Gripper dc at fully closed position
 full_release_dc = 13 # Gripper dc at fully open position
 

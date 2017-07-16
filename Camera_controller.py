@@ -99,7 +99,7 @@ def move(servo_chan, servo_pl_limits, a):
 
 
 
-if __name__ = "__main__":
+if __name__ == "__main__":
     # Arguments
     parser = argparse.ArgumentParser()
 
@@ -107,7 +107,7 @@ if __name__ = "__main__":
     # Command arguments
     g = parser.add_mutually_exclusive_group(required=True)
     g.add_argument("-p", "--pan", help="Pan camera", action="store_true")
-    g.add_argument("-m", "--angle", help="Move to specific angle (degrees)", action="store_true")
+    g.add_argument("-m", "--move", help="Move to specific angle (degrees)", action="store_true")
 
 
     # Optional arguments

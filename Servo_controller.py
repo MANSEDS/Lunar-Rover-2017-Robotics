@@ -56,51 +56,49 @@ def calc_pl(pl_min, pl_max, angle):
 
 
 if __name__ == "__main__":
+    while True:
+        import argparse
 
-    import argparse
+        # Arguments
+        parser = argparse.ArgumentParser()
+        parser.add_argument("a", help="Angle (Degrees)")
 
-    # Arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument("a", help="Angle (Degrees)")
+        # Arguments for direct GPIO control from Pi
+        # parser.add_argument("dc_min", help="Minimum Duty Cycle")
+        # parser.add_argument("dc_max", help="Maximum Duty Cycle")
+        # parser.add_argument("pin", help="PWM Pin No. (BCM)")
 
-    # Arguments for direct GPIO control from Pi
-    # parser.add_argument("dc_min", help="Minimum Duty Cycle")
-    # parser.add_argument("dc_max", help="Maximum Duty Cycle")
-    # parser.add_argument("pin", help="PWM Pin No. (BCM)")
+        # Arguments for Adafruit PWM hat control
+        parser.add_argument("pl_min", help="Minimum Pulse Length")
+        parser.add_argument("pl_max", help="Maximum Pulse Length")
+        parser.add_argument("channel", help="Channel No. (Adafruit PWM Hat)")
 
-    # Arguments for Adafruit PWM hat control
-    parser.add_argument("pl_min", help="Minimum Pulse Length")
-    parser.add_argument("pl_max", help="Maximum Pulse Length")
-    parser.add_argument("channel", help="Channel No. (Adafruit PWM Hat)")
-
-    # Parse arguments
-    args = parser.parse_args()
-    a = float(args.a)
-    # dc_min = float(args.dc_min)
-    # dc_max = float(args.dc_max)
-    # pin = int(args.pin)
-    pl_min = float(args.pl_min)
-    pl_max = float(args.pl_max)
-    channel = int(args.channel)
-    print(channel)
-    logging.warning("Channel: %s", channel)
-
-
-    # Calculate interpolated duty cycle
-    # dc = calc_dc(dc_min, dc_max, a)
+        # Parse arguments
+        args = parser.parse_args()
+        a = float(args.a)
+        # dc_min = float(args.dc_min)
+        # dc_max = float(args.dc_max)
+        # pin = int(args.pin)
+        pl_min = float(args.pl_min)
+        pl_max = float(args.pl_max)
+        channel = int(args.channel)
+        logging.warning("Channel: %s", channel)
 
 
-    # Calculate interpolated pulse length
-    pl = calc_pl(pl_min, pl_max, a)
-    pl = int(pl)
-    logging.debug("Pulse length: %s", pl)
+        # Calculate interpolated duty cycle
+        # dc = calc_dc(dc_min, dc_max, a)
 
 
-    # Actuate servo
-    # GPIO_set(pin, dc)
-    # GPIO_clear()
-    pwm.set_pwm(channel, 0, pl)
+        # Calculate interpolated pulse length
+        pl = calc_pl(pl_min, pl_max, a)
+        pl = int(pl)
+        logging.debug("Pulse length: %s", pl)
 
+
+        # Actuate servo
+        # GPIO_set(pin, dc)
+        # GPIO_clear()
+        pwm.set_pwm(channel, 0, pl)
 else:
     dc = calc_dc(dc_min, dc_max, a)
     pl = calc_pl(pl_min, pl_max, a)
