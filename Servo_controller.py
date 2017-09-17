@@ -94,7 +94,6 @@ if __name__ == "__main__":
         pl = int(pl)
         logging.debug("Pulse length: %s", pl)
 
-
         # Actuate servo
         # GPIO_set(pin, dc)
         # GPIO_clear()

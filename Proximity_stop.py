@@ -52,4 +52,3 @@ def warn():
 if __name__ == "__main__":
     GPIO.add_event_detect(near_pins, GPIO.FALLING, callback=stop)
     GPIO.add_event_detect(far_pins, GPIO.FALLING, callback=warn)
-    

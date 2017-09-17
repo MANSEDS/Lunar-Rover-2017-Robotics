@@ -10,7 +10,7 @@ import logging
 
 
 # System variables
-motor_hilo_pins= [[0, 0], [0, 0], [0, 0], [0, 0]]
+motor_hilo_pins= [[22, 23], [24, 25], [4, 17], [18, 27]]
 
 
 # GPIO setup

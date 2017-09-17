@@ -3,6 +3,7 @@
 
 
 # Import dependencies
+import os
 import Adafruit_PCA9685
 import argparse
 import RPi.GPIO as GPIO
@@ -12,6 +13,14 @@ import logging
 
 # Logging config
 logging.basicConfig(filename='drive.log', level=logging.DEBUG)
+
+# Set index
+index = 0
+if os.path.isfile("/var/www/html/drive.dat"):
+    with open("/var/www/html/drive.dat", "r") as handle:
+        lines = handle.readlines()
+        if len(lines) != 0:
+            index = int(lines[-1].split()[0]) + 1
 
 
 # Arguments
@@ -66,9 +75,9 @@ max_rpm = 26.0
 max_ang_vel = max_rpm * pi / 30 # rad/s
 motor_pwm_pins = [0, 0, 0, 0]
 motor_channels = [8, 9, 10, 11]
-motor_hilo_pins = [[22, 23], [25, 24], [0, 0], [0, 0]]
+motor_hilo_pins = [[22, 23], [25, 24], [4, 17], [18, 27]]
 motor_dc_limits = [[0, 100], [0, 100], [0, 100], [0, 100]]
-motor_pl_limits = [[550, 4050], [550, 4050], [0, 4095], [0, 4095]]
+motor_pl_limits = [[550, 4050], [550, 4050], [550, 4095], [550, 4095]]
 motor_insts = []
 
 
@@ -151,6 +160,7 @@ def calc_dc(dc_min, dc_max, des_ang_vel):
 def calc_pl(pl_min, pl_max, des_ang_vel):
     pl_range = pl_max - pl_min
     inter = pl_range * des_ang_vel / max_ang_vel
+    per = inter / pl_range
     pl = pl_min + inter
     logging.debug("Calculated required pulse length for desired angular velocity: %s", pl)
     pl = int(pl) 
@@ -205,8 +215,12 @@ if (f or b):
                     # dc = calc_dc(motor_dc_limits[i][0], motor_dc_limits[i][1], des_ang_vel)
                     # m = motor_insts[i]
                     # m.start(dc)
-                    pl = calc_pl((motor_pl_limits[i][0], motor_pl_limits[i][1], des_ang_vel))
+                    pl, per = calc_pl(motor_pl_limits[i][0], motor_pl_limits[i][1], des_ang_vel)
                     pwm.set_pwm(motor_channels[i], 0, pl)
+                    with open("/var/www/html/drive.dat", "a+") as handle:
+                        handle.write("{} {} {}".format(index, -1, per))
+                    logging.warning("{} {} {}".format(index, -1, per))
+                    index += 1
                 time.sleep(d)
                 for i in range(0, 4, 1):
                     # m = motor_insts[i]
@@ -230,8 +244,12 @@ elif (l or r):
                 # dc = calc_dc(motor_dc_limits[i][0], motor_dc_limits[i][1], des_ang_vel)
                 # m = motor_insts[i]
                 # m.start(dc)
-                pl = calc_pl(motor_pl_limits[i][0], motor_pl_limits[i][1], des_ang_vel)
+                pl, per = calc_pl(motor_pl_limits[i][0], motor_pl_limits[i][1], des_ang_vel)
                 pwm.set_pwm(motor_channels[i], 0, pl)
+                with open("/var/www/html/drive.dat", "a+") as handle:
+                    handle.write("{} {} {}".format(index, 0, a))
+                logging.warning("{} {} {}".format(index, 0, a))
+                index += 1
             time.sleep(t)
             for i in range(0, 4, 1):
                 # m = motor_insts[i]
@@ -244,8 +262,13 @@ elif (l or r):
                     # dc = calc_dc(motor_dc_limits[i][0], motor_dc_limits[i][1], des_ang_vel)
                     # m = motor_insts[i]
                     # m.start(dc)
-                    pl = calc_pl(motor_pl_limits[i][0], motor_pl_limits[i][1], des_ang_vel)
+                    pl, per = calc_pl(motor_pl_limits[i][0], motor_pl_limits[i][1], des_ang_vel)
                     pwm.set_pwm(motor_channels[i], 0, pl)
+                    per = - per
+                    with open("/var/www/html/drive.dat", "a+") as handle:
+                        handle.write("{} {} {}".format(index, 0, a))
+                    logging.warning("{} {} {}".format(index, 0, a))
+                    index += 1
                 time.sleep(t)
                 for i in range(0, 4, 1):
                     # m = motor_insts[i]
