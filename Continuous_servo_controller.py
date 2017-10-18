@@ -1,16 +1,16 @@
-# MANSEDS Lunar Rover -- Servo Controller
+# MANSEDS Lunar Rover -- Continuous Servo Controller
 # Author: Ethan Ramsay
 
 # Abbreviations:
 # dc = duty cycle
 # pl = pulse length
-# a = angle
 # pin = pulse width modulation pin no.
 
 # Import dependencies
 import RPi.GPIO as GPIO
 import logging
 import Adafruit_PCA9685
+import time
 
 
 # Logging config
@@ -48,6 +48,7 @@ def determine_zero_pl(pl_min, pl_max):
         pwm.set_pwm(channel, 0, pl)
         print(pl)
         pl + 10
+        time.sleep(1)
 
 
 def speed_loop():
