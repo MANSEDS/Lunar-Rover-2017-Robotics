@@ -21,8 +21,8 @@ channel_arm = [0, 1, 2, 3, 4] # Arm servo PWM channels
 channel_grip = [5, 6] # Gripper servo PWM channels
 pl_limits_arm = [[160, 600], [160, 600], [160, 600], [160, 600], [160, 600], [160, 600]] # Arm servo pl limits
 pl_limits_grip = [[160, 600], [160, 600]] # Gripper servo pulse length limits
-full_grip_pl = 300 
-full_release_pl = 580 
+full_grip_pl = 300
+full_release_pl = 580
 deposit_pl = [400, 400, 400, 400, 400, 400, 300]
 pwm_arm = [0, 0, 0, 0, 0] # Arm servo PWM pins
 pwm_grip = [0, 0] # Gripper servo PWM pins
@@ -30,10 +30,11 @@ dc_limits_arm = [[0, 13], [0, 13], [0, 13], [0, 13], [0, 13], [0, 13]] # Arm ser
 dc_limits_grip = [[0, 13], [0, 13]] # Gripper servo pulse length limits
 full_grip_dc = 7 # Gripper dc at fully closed position
 full_release_dc = 13 # Gripper dc at fully open position
+arm_angle = 0 # Arm angle relative to chassis
 
 
 # Create kinematic chain from URDF file
-# lunar_chain = ikpy.chain.Chain.from_urdf_file("arm.urdf") 
+# lunar_chain = ikpy.chain.Chain.from_urdf_file("arm.urdf")
 
 
 # GPIO setup
@@ -61,7 +62,11 @@ logging.debug("Adafruit PWM freq set to 60")
 # Positioning functions
 def calc_servo_angles(target_vector):
     logging.debug("Desired gripper position vector: %s", target_vector)
-    servo_angles = lunar_chain.inverse_kinematics(target_vector)
+    if target_vector[0] < max_radius:
+        raise ValueError('Desired radius exceeds maximum!')
+    if target_vector[1] < max_height:
+        raise ValueError('Desired height exceeds maximum!')
+    servo_angles = []
     logging.debug("Calculated servo angles: %s", servo_angles)
     return servo_angles
 
@@ -133,15 +138,22 @@ def position_gripper(target_vector):
     a = calc_servo_angles(target_vector)
     pl = [0, 0, 0, 0, 0]
     val = 1
-    for i in range(0, 5, 1):
+    for i in range(1, 5, 1):
         pl[i] = calc_pl(pl_limits_arm[i][0], pl_limits_arm[i][1], a[i])
     while True:
-        for i in range(0, 5, 1):
-            pwm.set_pwm(i, 0, pl)
+        pwm.set_pwm(1, 0, pl[1])
+        pwm.set_pwm(2, 0, pl[2])
+        pwm.set_pwm(3, 0, pl[3])
+        pwm.set_pwm(4, 0, pl[4])
+        pwm.set_pwm(5, 0, pl[5])
         if val == 1:
             logging.debug("Arm position command called for target vector: {}".format(target_vector))
             logging.debug("Calculated pulse lengths to achieve target vector: {}".format(pl))
             val -= 1
+
+
+def rotate_arm(desired_angle):
+    pass
 
 
 def grip():
@@ -169,7 +181,7 @@ def worm():
                 pl_1 = 400 - i
             if i > 20 and i < 200:
                 pl_1 = 300
-                pl_3 = 60 + i 
+                pl_3 = 60 + i
             if i > 200:
                 pl_1 = 250
                 pl_3 = 400 -i
@@ -182,7 +194,7 @@ def worm():
                 pl_3 = 160 + 400 - i
                 pl_4 = 160 + 400 - i
             pwm.set_pwm(1, 0, pl_1)
-            pwm.set_pwm(2, 0, pl_1)                
+            pwm.set_pwm(2, 0, pl_1)
 
 
 # Main
@@ -195,7 +207,8 @@ if __name__ == "__main__":
     ge.add_argument("-s", "--stow", help="Stow arm", action="store_true")
     ge.add_argument("-w", "--wave", help="Do the worm", action="store_true")
     gp = g.add_mutually_exclusive_group()
-    gp.add_argument("-p", "--position", help="Gripper Position Vector")
+    gp.add_argument("-p", "--rotate", help="Rotate arm at base (Angle)")
+    gp.add_argument("-p", "--position", help="Gripper Position Vector [radius, height]")
     gp.add_argument("-i", "--icebox", help="Position gripper above ice box to deposit sample", action="store_true")
     gg = g.add_mutually_exclusive_group()
     gg.add_argument("-g", "--grip", help="Grip", action="store_true")
@@ -204,12 +217,15 @@ if __name__ == "__main__":
     e = args.extend
     s = args.stow
     w = args.wave
+    if args.rotate:
+        r = int(args.rotate)
+    r = False
     p = args.position # <-- convert from string into ??? format???
-    dep = args.icebox
+    i = args.icebox
     g = args.grip
     d = args.drop
-    logging.debug("Arguments parsed: e=%s, s=%s, z=%s, r=%s, t=%s, g=%s, d=%s", + \
-                        e, s, g, d)
+    logging.debug("Arguments parsed: e=%s, s=%s, r=%s, t=%s, i=%s, g=%s, d=%s, w=%s", + \
+                        e, s, r, i, g, d, w)
 
 
     if (e or s):
@@ -218,11 +234,13 @@ if __name__ == "__main__":
             extend()
         elif s:
             stow()
-    elif p or dep:
+    elif ((p or r) or i):
         if p:
             # GPIO_arm()
             position_gripper(p)
-        elif dep:
+        elif r:
+            rotate_arm(r)
+        elif i:
             deposit_pos()
     elif (g or d):
         # GPIO_grip()
