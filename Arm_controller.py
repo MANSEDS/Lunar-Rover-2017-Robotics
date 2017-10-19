@@ -30,7 +30,7 @@ dc_limits_arm = [[0, 13], [0, 13], [0, 13], [0, 13], [0, 13], [0, 13]] # Arm ser
 dc_limits_grip = [[0, 13], [0, 13]] # Gripper servo pulse length limits
 full_grip_dc = 7 # Gripper dc at fully closed position
 full_release_dc = 13 # Gripper dc at fully open position
-arm_angle = 0 # Arm angle relative to chassis
+base_angle_data_filename = "base_angle.dat" # External file storing base angle value
 
 
 # Create kinematic chain from URDF file
