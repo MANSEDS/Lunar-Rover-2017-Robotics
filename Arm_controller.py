@@ -124,9 +124,9 @@ def stow():
 def deposit_pos():
     val = 1
     deposit_pl[0] = 410
-    deposit_pl[1] = calc_pl(pl_limits_arm[1][0], pl_limits_arm[1][0], 45)
+    deposit_pl[1] = calc_pl(pl_limits_arm[1][0], pl_limits_arm[1][0], 135)
     deposit_pl[2] = deposit_pl[1]
-    deposit_pl[3] = calc_pl(pl_limits_arm[3][0], pl_limits_arm[3][0], 135)
+    deposit_pl[3] = calc_pl(pl_limits_arm[3][0], pl_limits_arm[3][0], 45)
     # need to set base rotation to 0
     rotate_arm(0, 0)
     while True:
