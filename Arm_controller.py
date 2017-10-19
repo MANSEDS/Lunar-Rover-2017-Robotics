@@ -80,7 +80,7 @@ def calc_dc(dc_min, dc_max, angle):
 
 
 def calc_pl(pl_min, pl_max, angle):
-    if angle < 180:
+    if angle > 180:
         raise ValueError("Desired angle exceeds servo range of 180 deg")
     pl_range = servo_max - servo_min
     inter = pl_range * angle / 180
@@ -241,7 +241,7 @@ if __name__ == "__main__":
     ge.add_argument("-s", "--stow", help="Stow arm", action="store_true")
     ge.add_argument("-w", "--wave", help="Do the worm", action="store_true")
     gp = g.add_mutually_exclusive_group()
-    gp.add_argument("-p", "--rotate", help="Rotate arm at base (Angle)")
+    gp.add_argument("-r", "--rotate", help="Rotate arm at base (Angle)")
     gp.add_argument("-p", "--position", help="Gripper Position Vector [radius, height]")
     gp.add_argument("-i", "--icebox", help="Position gripper above ice box to deposit sample", action="store_true")
     gg = g.add_mutually_exclusive_group()
@@ -258,8 +258,8 @@ if __name__ == "__main__":
     i = args.icebox
     g = args.grip
     d = args.drop
-    logging.debug("Arguments parsed: e=%s, s=%s, r=%s, t=%s, i=%s, g=%s, d=%s, w=%s", + \
-                        e, s, r, i, g, d, w)
+    logging.debug("Arguments parsed: e=%s, s=%s, r=%s, p=%s, i=%s, g=%s, d=%s, w=%s", + \
+                        e, s, r, p, i, g, d, w)
 
 
     if (e or s):
