@@ -23,6 +23,7 @@ arm_angle = 0 # degrees
 zero_motion_pl = 410
 compensation_factor = 1.027
 ccw_full_rot_time = 1.1 # s / 360 deg
+base_angle_data_filename = "base_angle.dat" # External file storing base angle value
 
 
 # GPIO setup function
@@ -73,9 +74,9 @@ def rotational_positioning(desired_angle, channel):
         raise ValueError("Desired angle exceeds current configuration range: min = -45 deg; max  \
         = 45 deg")
     current_angle = 0
-    with open(base_angle_data_file, 'r') as f:
-        desired_angle = f.read()
-    print(desired_angle)
+    with open(base_angle_data_filename, 'r') as f:
+        current_angle = f.read()
+    print(current_angle)
     perc_full_rot = 100 * (desired_angle - current_angle) / 360
     print(perc_full_rot)
     if desired_angle < current_angle:
@@ -84,12 +85,16 @@ def rotational_positioning(desired_angle, channel):
         pwm.set_pwm(channel, 0, 440)
         time.sleep(rot_time)
         pwm.set_pwm(channel, 0, 410)
+        with open(base_angle_data_filename, 'w') as f:
+            f.write(desired_angle)
         time.sleep(100000)
     elif desired_angle > current_angle:
         rot_time = ccw_full_rot_time * compensation_factor * perc_full_rot / 100
         pwm.set_pwm(channel, 0, 220)
         time.sleep(rot.time)
         pwm.set_pwm(channel, 0, 410)
+        with open(base_angle_data_filename, 'w') as f:
+            f.write(desired_angle)
         time.sleep(1000000)
     else:
         pass # cuurent angle must be equal to desired angle
