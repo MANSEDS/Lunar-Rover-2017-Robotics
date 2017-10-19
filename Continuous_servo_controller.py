@@ -61,29 +61,38 @@ def speed_loop(pl_min, pl_max, channel):
     pwm.set_pwm(channel,0,440)
     time.sleep(1.1)
     pwm.set_pwm(channel,0,410)
-    time.sleep(5)    
+    time.sleep(5)
     pwm.set_pwm(channel,0,220)
     time.sleep(1.1297)
     pwm.set_pwm(channel,0,410)
     time.sleep(5)
 
 
-def rotational_positioning(dir_bool, angle, channel):
-    perc_full_rot = 100 * angle / 360
+def rotational_positioning(desired_angle, channel):
+    if desired_angle > 45 or desired_angle < -45:
+        raise ValueError("Desired angle exceeds current configuration range: min = -45 deg; max  \
+        = 45 deg")
+    current_angle = 0
+    with open(base_angle_data_file, 'r') as f:
+        desired_angle = f.read()
+    print(desired_angle)
+    perc_full_rot = 100 * (desired_angle - current_angle) / 360
     print(perc_full_rot)
-    if dir_bool:
+    if desired_angle < current_angle:
         rot_time = ccw_full_rot_time * perc_full_rot / 100
         print(rot_time)
         pwm.set_pwm(channel, 0, 440)
         time.sleep(rot_time)
         pwm.set_pwm(channel, 0, 410)
         time.sleep(100000)
-    else:
+    elif desired_angle > current_angle:
         rot_time = ccw_full_rot_time * compensation_factor * perc_full_rot / 100
         pwm.set_pwm(channel, 0, 220)
         time.sleep(rot.time)
         pwm.set_pwm(channel, 0, 410)
         time.sleep(1000000)
+    else:
+        pass # cuurent angle must be equal to desired angle
 
 
 if __name__ == "__main__":
@@ -120,5 +129,5 @@ if __name__ == "__main__":
         # Actuate servo
         # GPIO_set(pin, dc)
         # GPIO_clear()
-        
+
         rotational_positioning(direction, angle, channel)

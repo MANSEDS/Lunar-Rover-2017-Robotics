@@ -62,10 +62,10 @@ logging.debug("Adafruit PWM freq set to 60")
 # Positioning functions
 def calc_servo_angles(target_vector):
     logging.debug("Desired gripper position vector: %s", target_vector)
-    if target_vector[0] < max_radius:
-        raise ValueError('Desired radius exceeds maximum!')
-    if target_vector[1] < max_height:
-        raise ValueError('Desired height exceeds maximum!')
+    target_radius = (target_vector[0]**2 + target_vector[1]**2)**(0.5)
+    if target_radius < max_radius:
+        raise ValueError('Desired position exceeds reach!')
+
     servo_angles = []
     logging.debug("Calculated servo angles: %s", servo_angles)
     return servo_angles
@@ -80,6 +80,8 @@ def calc_dc(dc_min, dc_max, angle):
 
 
 def calc_pl(pl_min, pl_max, angle):
+    if angle < 180:
+        raise ValueError("Desired angle exceeds servo range of 180 deg")
     pl_range = servo_max - servo_min
     inter = pl_range * angle / 180
     pl = pl_min + inter
@@ -121,8 +123,9 @@ def stow():
 
 def deposit_pos():
     val = 1
+    deposit_pl[1] = calc_pl(pl_limits_arm[1][0], pl_limits_arm[1][0], 10)
+    # need to set base rotation to 0
     while True:
-        pwm.set_pwm(0, 0, deposit_pl[0])
         pwm.set_pwm(1, 0, deposit_pl[1])
         pwm.set_pwm(2, 0, deposit_pl[2])
         pwm.set_pwm(3, 0, deposit_pl[3])
