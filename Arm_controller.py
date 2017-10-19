@@ -6,9 +6,9 @@
 import argparse
 import RPi.GPIO as GPIO
 import Adafruit_PCA9685
-import ikpy
+# import ikpy
 import numpy as np
-from ikpy import plot_utils
+# from ikpy import plot_utils
 import logging
 
 
@@ -123,9 +123,14 @@ def stow():
 
 def deposit_pos():
     val = 1
-    deposit_pl[1] = calc_pl(pl_limits_arm[1][0], pl_limits_arm[1][0], 10)
+    deposit_pl[0] = 410
+    deposit_pl[1] = calc_pl(pl_limits_arm[1][0], pl_limits_arm[1][0], 45)
+    deposit_pl[2] = deposit_pl[1]
+    deposit_pl[3] = calc_pl(pl_limits_arm[3][0], pl_limits_arm[3][0], 135)
     # need to set base rotation to 0
+    rotate_arm(0, 0)
     while True:
+        pwm.set_pwm(0, 0, deposit_pl[0])
         pwm.set_pwm(1, 0, deposit_pl[1])
         pwm.set_pwm(2, 0, deposit_pl[2])
         pwm.set_pwm(3, 0, deposit_pl[3])
@@ -155,8 +160,34 @@ def position_gripper(target_vector):
             val -= 1
 
 
-def rotate_arm(desired_angle):
-    pass
+def rotate_arm(desired_angle, channel):
+    if desired_angle > 40 or desired_angle < -40:
+        raise ValueError("Desired angle exceeds current configuration range: min = -40 deg; max  \
+        = 40 deg")
+    current_angle = 0
+    with open(base_angle_data_filename, 'r') as f:
+        current_angle = f.read()
+    print(current_angle)
+    perc_full_rot = 100 * (desired_angle - current_angle) / 360
+    print(perc_full_rot)
+    if desired_angle < current_angle:
+        rot_time = ccw_full_rot_time * perc_full_rot / 100
+        print(rot_time)
+        pwm.set_pwm(channel, 0, 440)
+        time.sleep(rot_time)
+        pwm.set_pwm(channel, 0, 410)
+        with open(base_angle_data_filename, 'w') as f:
+            f.write(desired_angle)
+    elif desired_angle > current_angle:
+        rot_time = ccw_full_rot_time * compensation_factor * perc_full_rot / 100
+        pwm.set_pwm(channel, 0, 220)
+        time.sleep(rot.time)
+        pwm.set_pwm(channel, 0, 410)
+        with open(base_angle_data_filename, 'w') as f:
+            f.write(desired_angle)
+    else:
+        pwm.set_pwm(channel, 0, 410)
+        # cuurent angle must be equal to desired angle
 
 
 def grip():
@@ -242,7 +273,7 @@ if __name__ == "__main__":
             # GPIO_arm()
             position_gripper(p)
         elif r:
-            rotate_arm(r)
+            rotate_arm(r, 0)
         elif i:
             deposit_pos()
     elif (g or d):
