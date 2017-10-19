@@ -166,9 +166,11 @@ def rotate_arm(desired_angle, channel):
         = 40 deg")
     current_angle = 0
     with open(base_angle_data_filename, 'r') as f:
-        current_angle = f.read()
+        current_angle_str = f.read()
+        print("current_angle_str: '" + current_angle_str + "'")
+        current_angle = int(current_angle_str)
     print(current_angle)
-    perc_full_rot = 100 * (desired_angle - current_angle) / 360
+    perc_full_rot = 100 * abs((desired_angle - current_angle)) / 360
     print(perc_full_rot)
     if desired_angle < current_angle:
         rot_time = ccw_full_rot_time * perc_full_rot / 100
