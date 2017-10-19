@@ -75,9 +75,11 @@ def rotational_positioning(desired_angle, channel):
         = 45 deg")
     current_angle = 0
     with open(base_angle_data_filename, 'r') as f:
-        current_angle = f.read()
+        current_angle_str = f.read()
+        print("current_angle_str: '" + current_angle_str + "'")
+        current_angle = int(current_angle_str)
     print(current_angle)
-    perc_full_rot = 100 * (desired_angle - current_angle) / 360
+    perc_full_rot = 100 * abs((desired_angle - current_angle)) / 360
     print(perc_full_rot)
     if desired_angle < current_angle:
         rot_time = ccw_full_rot_time * perc_full_rot / 100
@@ -86,15 +88,15 @@ def rotational_positioning(desired_angle, channel):
         time.sleep(rot_time)
         pwm.set_pwm(channel, 0, 410)
         with open(base_angle_data_filename, 'w') as f:
-            f.write(desired_angle)
+            f.write(str(desired_angle))
         time.sleep(100000)
     elif desired_angle > current_angle:
         rot_time = ccw_full_rot_time * compensation_factor * perc_full_rot / 100
         pwm.set_pwm(channel, 0, 220)
-        time.sleep(rot.time)
+        time.sleep(rot_time)
         pwm.set_pwm(channel, 0, 410)
         with open(base_angle_data_filename, 'w') as f:
-            f.write(desired_angle)
+            f.write(str(desired_angle))
         time.sleep(1000000)
     else:
         pwm.set_pwm(channel, 0, 410)
