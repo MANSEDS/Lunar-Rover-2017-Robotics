@@ -97,7 +97,9 @@ def rotational_positioning(desired_angle, channel):
             f.write(desired_angle)
         time.sleep(1000000)
     else:
-        pass # cuurent angle must be equal to desired angle
+        pwm.set_pwm(channel, 0, 410)
+        time.sleep(100000)
+        # cuurent angle must be equal to desired angle
 
 
 if __name__ == "__main__":
@@ -107,7 +109,6 @@ if __name__ == "__main__":
         # Arguments
         parser = argparse.ArgumentParser()
         parser.add_argument("angle", help="Angle of turn (deg)")
-        parser.add_argument("direction", help="Direction of turn - True = CCW")
 
         # Arguments for direct GPIO control from Pi
         # parser.add_argument("dc_min", help="Minimum Duty Cycle")
@@ -122,7 +123,6 @@ if __name__ == "__main__":
         # Parse arguments
         args = parser.parse_args()
         angle = int(args.angle)
-        direction = args.direction
         # dc_min = float(args.dc_min)
         # dc_max = float(args.dc_max)
         # pin = int(args.pin)
@@ -135,4 +135,4 @@ if __name__ == "__main__":
         # GPIO_set(pin, dc)
         # GPIO_clear()
 
-        rotational_positioning(direction, angle, channel)
+        rotational_positioning(angle, channel)
