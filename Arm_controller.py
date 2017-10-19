@@ -241,7 +241,7 @@ if __name__ == "__main__":
     ge.add_argument("-s", "--stow", help="Stow arm", action="store_true")
     ge.add_argument("-w", "--wave", help="Do the worm", action="store_true")
     gp = g.add_mutually_exclusive_group()
-    gp.add_argument("-p", "--rotate", help="Rotate arm at base (Angle)")
+    gp.add_argument("-r", "--rotate", help="Rotate arm at base (Angle)")
     gp.add_argument("-p", "--position", help="Gripper Position Vector [radius, height]")
     gp.add_argument("-i", "--icebox", help="Position gripper above ice box to deposit sample", action="store_true")
     gg = g.add_mutually_exclusive_group()
