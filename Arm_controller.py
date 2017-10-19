@@ -82,7 +82,7 @@ def calc_dc(dc_min, dc_max, angle):
 def calc_pl(pl_min, pl_max, angle):
     if angle > 180:
         raise ValueError("Desired angle exceeds servo range of 180 deg")
-    pl_range = servo_max - servo_min
+    pl_range = pl_max - pl_min
     inter = pl_range * angle / 180
     pl = pl_min + inter
     logging.debug("Calculated required pulse length for desired servo angle: %s", pl)
