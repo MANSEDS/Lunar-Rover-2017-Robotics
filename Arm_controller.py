@@ -10,6 +10,7 @@ import Adafruit_PCA9685
 import numpy as np
 # from ikpy import plot_utils
 import logging
+import time
 
 
 # Logging config
@@ -19,11 +20,12 @@ logging.basicConfig(filename='arm.log', level=logging.DEBUG)
 # System variables
 channel_arm = [0, 1, 2, 3, 4] # Arm servo PWM channels
 channel_grip = [5, 6] # Gripper servo PWM channels
-pl_limits_arm = [[160, 600], [160, 600], [160, 600], [160, 600], [160, 600], [160, 600]] # Arm servo pl limits
+pl_limits_arm = [[160, 600], [160, 750], [160, 750], [160, 600], [160, 600], [160, 600]] # Arm servo pl limits
 pl_limits_grip = [[160, 600], [160, 600]] # Gripper servo pulse length limits
 full_grip_pl = 300
 full_release_pl = 580
-deposit_pl = [400, 400, 400, 400, 400, 400, 300]
+stationary_base_pl = 410
+deposit_angles = [102, 140, 140, 180, 140, 5, 45]
 pwm_arm = [0, 0, 0, 0, 0] # Arm servo PWM pins
 pwm_grip = [0, 0] # Gripper servo PWM pins
 dc_limits_arm = [[0, 13], [0, 13], [0, 13], [0, 13], [0, 13], [0, 13]] # Arm servo pl limits
@@ -93,14 +95,22 @@ def calc_pl(pl_min, pl_max, angle):
 # Control functions
 def extend():
     val = 1
+    extended_pl = [0, 0, 0, 0, 0]
+    extended_pl[0] = 410
+    extended_pl[1] = 180 # calc_pl(pl_limits_arm[1][0], pl_limits_arm[1][1], 10)
+    extended_pl[2] = extended_pl[1]
+    extended_pl[3] = calc_pl(pl_limits_arm[3][0], pl_limits_arm[3][1], 90)
+    extended_pl[4] = calc_pl(pl_limits_arm[4][0], pl_limits_arm[4][1], 40)
+
+    # set base rotation to 0 deg
+    rotate_arm(0, 0, 0)
+
     while True:
         pwm.set_pwm(0, 0, pl_limits_arm[0][1])
         pwm.set_pwm(1, 0, pl_limits_arm[1][1])
-        pwm.set_pwm(2, 0, pl_limits_arm[2][1])
+   #     pwm.set_pwm(2, 0, pl_limits_arm[2][1])
         pwm.set_pwm(3, 0, pl_limits_arm[3][1]/2)
         pwm.set_pwm(4, 0, pl_limits_arm[4][1]/2)
-        pwm.set_pwm(5, 0, pl_limits_grip[0][1]/2)
-        pwm.set_pwm(6, 0, pl_limits_grip[1][1]/2)
         if val > 0:
             logging.debug("Arm extended")
             val -= 1
@@ -123,12 +133,18 @@ def stow():
 
 def deposit_pos():
     val = 1
+    deposit_pl = [0, 0, 0, 0, 0, 0, 0]
     deposit_pl[0] = 410
-    deposit_pl[1] = calc_pl(pl_limits_arm[1][0], pl_limits_arm[1][0], 45)
+    deposit_pl[1] = calc_pl(pl_limits_arm[1][0], pl_limits_arm[1][1], 140)
     deposit_pl[2] = deposit_pl[1]
-    deposit_pl[3] = calc_pl(pl_limits_arm[3][0], pl_limits_arm[3][0], 135)
-    # need to set base rotation to 0
-    rotate_arm(0, 0)
+    deposit_pl[3] = calc_pl(pl_limits_arm[3][0], pl_limits_arm[3][1], 180)
+    deposit_pl[4] = calc_pl(pl_limits_arm[4][0], pl_limits_arm[4][1], 140)
+    deposit_pl[5] = calc_pl(pl_limits_grip[0][0], pl_limits_grip[0][1], 5)
+    deposit_pl[6] = calc_pl(pl_limits_grip[1][0], pl_limits_grip[1][1], 45)
+    
+    # set base rotation to 0
+    rotate_arm(0, 0, 0)
+
     while True:
         pwm.set_pwm(0, 0, deposit_pl[0])
         pwm.set_pwm(1, 0, deposit_pl[1])
@@ -136,6 +152,7 @@ def deposit_pos():
         pwm.set_pwm(3, 0, deposit_pl[3])
         pwm.set_pwm(4, 0, deposit_pl[4])
         pwm.set_pwm(5, 0, deposit_pl[5])
+        time.sleep(2)
         pwm.set_pwm(6, 0, deposit_pl[6])
         if val == 1:
             logging.debug("Gripper positioned above ice box")
@@ -160,7 +177,7 @@ def position_gripper(target_vector):
             val -= 1
 
 
-def rotate_arm(desired_angle, channel):
+def rotate_arm(desired_angle, channel, hold_time):
     if desired_angle > 40 or desired_angle < -40:
         raise ValueError("Desired angle exceeds current configuration range: min = -40 deg; max  \
         = 40 deg")
@@ -180,6 +197,8 @@ def rotate_arm(desired_angle, channel):
         pwm.set_pwm(channel, 0, 410)
         with open(base_angle_data_filename, 'w') as f:
             f.write(desired_angle)
+        if hold_time != 0:
+            time.sleep(hold_time)
     elif desired_angle > current_angle:
         rot_time = ccw_full_rot_time * compensation_factor * perc_full_rot / 100
         pwm.set_pwm(channel, 0, 220)
@@ -187,9 +206,13 @@ def rotate_arm(desired_angle, channel):
         pwm.set_pwm(channel, 0, 410)
         with open(base_angle_data_filename, 'w') as f:
             f.write(desired_angle)
+        if hold_time != 0:
+            time.sleep(hold_time)
     else:
         pwm.set_pwm(channel, 0, 410)
-        # cuurent angle must be equal to desired angle
+        if hold_time != 0:
+            time.sleep(hold_time)
+        # current angle must be equal to desired angle
 
 
 def grip():
@@ -275,7 +298,7 @@ if __name__ == "__main__":
             # GPIO_arm()
             position_gripper(p)
         elif r:
-            rotate_arm(r, 0)
+            rotate_arm(r, 0, 100000)
         elif i:
             deposit_pos()
     elif (g or d):
