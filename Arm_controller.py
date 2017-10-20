@@ -11,6 +11,7 @@ import numpy as np
 # from ikpy import plot_utils
 import logging
 import time
+from math import sqrt, pow, atan2, cos, sin
 
 
 # Logging config
@@ -37,10 +38,15 @@ full_release_pl = 580
 ## Duty Cycle Limits
 # full_grip_dc = 7 # Gripper dc at fully closed position
 # full_release_dc = 13 # Gripper dc at fully open position
+### Arm dimensions
+l1 = 150 # Link one is 150 mm long
+l2 = 260 # Link two is 260 mm long
+l3 = 145 # Link three is 145 mm long
+max_radius = sqrt(pow(l1,2) + pow(l2,2))
 ### Preset values
 stationary_base_pl = 410
 deposit_angles = [102, 140, 140, 180, 140, 5, 45]
-# External filenames
+### External filenames
 base_angle_data_filename = "base_angle.dat" # External file storing base angle value
 
 
@@ -73,11 +79,24 @@ logging.debug("Adafruit PWM freq set to 60")
 # Positioning functions
 def calc_servo_angles(target_vector):
     logging.debug("Desired gripper position vector: %s", target_vector)
-    target_radius = (target_vector[0]**2 + target_vector[1]**2)**(0.5)
+    r = target_vector[0]
+    z = target_vector[1] + 145
+    target_radius = sqrt(pow(r,2)+pow(z,2))
     if target_radius < max_radius:
         raise ValueError('Desired position exceeds reach!')
 
-    servo_angles = []
+    # Inverse kinematics solver for 2 link arm
+    c2 = (pow(r, 2) + pow(z, 2) - pow(l1, 2) - pow(l2, 2)) / (2 * l1 * l2)
+    s2 = sqrt(1 - pow(c2, 2))
+    th2 = atan2(s2, c2)
+    k1 = l1 + l2*c2
+    k2 = l2 * s2
+    th1 = atan2(z, r) - atan2(k2, k1)
+
+    # for link 3 always downwards
+    th3 = 270 - th1 - th2
+
+    servo_angles = [th1, th2, th3]
     logging.debug("Calculated servo angles: %s", servo_angles)
     return servo_angles
 
@@ -172,10 +191,15 @@ def position_gripper(target_vector):
 
     a = calc_servo_angles(target_vector)
     pl = [0, 0, 0, 0, 0]
+    pl[0] = stationary_base_pl
+    pl[1] = calc_pl(pl_limits_arm[1][0], pl_limits_arm[1][1], a[0])
+    pl[2] = pl[1]
+    pl[3] = calc_pl(pl_limits_arm[3][0], pl_limits_arm[3][1], a[1])
+    pl[4] = calc_pl(pl_limits_arm[4][0], pl_limits_arm[4][1], a[2])
     val = 1
-    for i in range(1, 5, 1):
-        pl[i] = calc_pl(pl_limits_arm[i][0], pl_limits_arm[i][1], a[i])
+
     while True:
+        pwm.set_pwm(0, 0, pl[1])
         pwm.set_pwm(1, 0, pl[1])
         pwm.set_pwm(2, 0, pl[2])
         pwm.set_pwm(3, 0, pl[3])
