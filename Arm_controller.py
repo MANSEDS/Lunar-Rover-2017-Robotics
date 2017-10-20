@@ -74,6 +74,8 @@ def GPIO_grip(pwm_grip):
 pwm = Adafruit_PCA9685.PCA9685()
 pwm.set_pwm_freq(60)
 logging.debug("Adafruit PWM freq set to 60")
+# Stop continuous servo from starting
+pwm.set_pwm(0, 0, stationary_base_pl)
 
 
 # Positioning functions
