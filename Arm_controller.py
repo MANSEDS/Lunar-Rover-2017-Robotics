@@ -84,6 +84,7 @@ def calc_servo_angles(target_vector):
     r = target_vector[0]
     z = target_vector[1] + 145
     target_radius = sqrt(pow(r,2)+pow(z,2))
+    logging.debug("r=%s, z=%s, target_radius=%s", r, z, target_radius)
     if target_radius < max_radius:
         raise ValueError('Desired position exceeds reach!')
 
@@ -315,7 +316,7 @@ if __name__ == "__main__":
     if args.rotate:
         r = int(args.rotate)
     r = False
-    p = args.position # <-- convert from string into ??? format???
+    p = args.position
     i = args.icebox
     g = args.grip
     d = args.drop
@@ -332,6 +333,9 @@ if __name__ == "__main__":
     elif ((p or r) or i):
         if p:
             # GPIO_arm()
+            r_des = p[0]
+            z_des = p[1]
+            logging.debug("r_des=%s, z_des=%s", r_des, z_des)
             position_gripper(p)
         elif r:
             rotate_arm(r, 0, 100000)
