@@ -43,7 +43,7 @@ full_release_pl = 580
 l1 = 150 # Link one is 150 mm long
 l2 = 260 # Link two is 260 mm long
 l3 = 145 # Link three is 145 mm long
-max_radius = sqrt(pow(l1,2) + pow(l2,2))
+max_radius = l1 + l2
 ### Preset values
 stationary_base_pl = 410
 deposit_angles = [102, 140, 140, 180, 140, 5, 45]
