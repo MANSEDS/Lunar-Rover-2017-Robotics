@@ -92,11 +92,11 @@ def calc_servo_angles(target_vector):
     c2 = (pow(r, 2) + pow(z, 2) - pow(l1, 2) - pow(l2, 2)) / (2 * l1 * l2)
     s2 = sqrt(1 - pow(c2, 2))
     th2_rad = atan2(s2, c2)
-    th2 = th2_rad * 180 / 3.142 + 90
+    th2 = th2_rad * 180 / 3.142
     k1 = l1 + l2*c2
     k2 = l2 * s2
     th1_rad = atan2(z, r) - atan2(k2, k1)
-    th1 = th1_rad * 180 / 3.142 + 90
+    th1 = th1_rad * 180 / 3.142
 
     # for link 3 always downwards
     th3 = 270 - th1 - th2
