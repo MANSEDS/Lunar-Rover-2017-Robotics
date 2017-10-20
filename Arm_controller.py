@@ -171,8 +171,8 @@ def deposit_pos():
     deposit_pl[0] = 410
     deposit_pl[1] = calc_pl(pl_limits_arm[1][0], pl_limits_arm[1][1], 130)
     deposit_pl[2] = deposit_pl[1]
-    deposit_pl[3] = calc_pl(pl_limits_arm[3][0], pl_limits_arm[3][1], 180)
-    deposit_pl[4] = calc_pl(pl_limits_arm[4][0], pl_limits_arm[4][1], 140)
+    deposit_pl[3] = calc_pl(pl_limits_arm[3][0], pl_limits_arm[3][1], 140)
+    deposit_pl[4] = calc_pl(pl_limits_arm[4][0], pl_limits_arm[4][1], 115)
     deposit_pl[5] = calc_pl(pl_limits_grip[0][0], pl_limits_grip[0][1], 5)
     deposit_pl[6] = calc_pl(pl_limits_grip[1][0], pl_limits_grip[1][1], 45)
 
