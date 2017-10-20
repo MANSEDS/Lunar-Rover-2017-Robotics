@@ -15,7 +15,7 @@ from math import sqrt, pow, atan2, cos, sin
 
 
 # Logging config
-logging.basicConfig(filename='arm.log', level=logging.DEBUG)
+logging.basicConfig(filename='arm.log', level=logging.WARNING)
 
 
 # System variables
@@ -80,11 +80,11 @@ pwm.set_pwm(0, 0, stationary_base_pl)
 
 # Positioning functions
 def calc_servo_angles(target_vector):
-    logging.debug("Desired gripper position vector: %s", target_vector)
+    logging.warning("Desired gripper position vector: %s", target_vector)
     r = target_vector[0]
     z = target_vector[1] + 145
     target_radius = sqrt(pow(r,2)+pow(z,2))
-    logging.debug("r=%s, z=%s, target_radius=%s", r, z, target_radius)
+    logging.warning("r=%s, z=%s, target_radius=%s", r, z, target_radius)
     if target_radius > max_radius:
         raise ValueError('Desired position exceeds reach!')
 
@@ -102,7 +102,7 @@ def calc_servo_angles(target_vector):
     th3 = 270 - th1 - th2
 
     servo_angles = [th1, th2, th3]
-    logging.debug("Calculated servo angles: %s", servo_angles)
+    logging.warning("Calculated servo angles: %s", servo_angles)
     return servo_angles
 
 
@@ -210,8 +210,8 @@ def position_gripper(target_vector):
         pwm.set_pwm(3, 0, pl[3])
         pwm.set_pwm(4, 0, pl[4])
         if val == 1:
-            logging.debug("Arm position command called for target vector: {}".format(target_vector))
-            logging.debug("Calculated pulse lengths to achieve target vector: {}".format(pl))
+            logging.warning("Arm position command called for target vector: {}".format(target_vector))
+            logging.warning("Calculated pulse lengths to achieve target vector: {}".format(pl))
             val -= 1
 
 
