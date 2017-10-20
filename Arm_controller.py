@@ -25,7 +25,8 @@ logging.basicConfig(filename='arm.log', level=logging.WARNING)
 channel_arm = [0, 1, 2, 3, 4] # Arm servo PWM channels
 channel_grip = [5, 6] # Gripper servo PWM channels
 ## Pulse Length Limits
-pl_limits_arm = [[160, 600], [160, 750], [160, 750], [160, 600], [160, 600], [160, 600]] # Arm servo pl limits
+# Arm servo pl limits
+pl_limits_arm = [[150, 750], [150, 750], [150, 750], [150, 750], [150, 750], [150, 750]]
 pl_limits_grip = [[160, 600], [160, 600]] # Gripper servo pulse length limits
 full_grip_pl = 300
 full_release_pl = 580
@@ -120,7 +121,7 @@ def calc_pl(pl_min, pl_max, angle):
     pl_range = pl_max - pl_min
     inter = pl_range * angle / 180
     pl = pl_min + inter
-    logging.debug("Calculated required pulse length for desired servo angle: %s", pl)
+    logging.warning("Calculated required pulse length for desired servo angle: %s", pl)
     pl = int(pl)
     return pl
 
@@ -130,7 +131,7 @@ def extend():
     val = 1
     extended_pl = [0, 0, 0, 0, 0]
     extended_pl[0] = 410
-    extended_pl[1] = 180 # calc_pl(pl_limits_arm[1][0], pl_limits_arm[1][1], 10)
+    extended_pl[1] = calc_pl(pl_limits_arm[1][0], pl_limits_arm[1][1], 90)
     extended_pl[2] = extended_pl[1]
     extended_pl[3] = calc_pl(pl_limits_arm[3][0], pl_limits_arm[3][1], 90)
     extended_pl[4] = calc_pl(pl_limits_arm[4][0], pl_limits_arm[4][1], 40)
@@ -139,11 +140,11 @@ def extend():
     rotate_arm(0, 0, 0)
 
     while True:
-        pwm.set_pwm(0, 0, pl_limits_arm[0][1])
-        pwm.set_pwm(1, 0, pl_limits_arm[1][1])
-   #     pwm.set_pwm(2, 0, pl_limits_arm[2][1])
-        pwm.set_pwm(3, 0, pl_limits_arm[3][1]/2)
-        pwm.set_pwm(4, 0, pl_limits_arm[4][1]/2)
+        pwm.set_pwm(0, 0, extended_pl[0])
+        pwm.set_pwm(1, 0, extended_pl[1])
+        pwm.set_pwm(2, 0, extended_pl[2])
+        pwm.set_pwm(3, 0, extended_pl[3])
+        pwm.set_pwm(4, 0, extended_pl[4])
         if val > 0:
             logging.debug("Arm extended")
             val -= 1
@@ -168,7 +169,7 @@ def deposit_pos():
     val = 1
     deposit_pl = [0, 0, 0, 0, 0, 0, 0]
     deposit_pl[0] = 410
-    deposit_pl[1] = calc_pl(pl_limits_arm[1][0], pl_limits_arm[1][1], 140)
+    deposit_pl[1] = calc_pl(pl_limits_arm[1][0], pl_limits_arm[1][1], 130)
     deposit_pl[2] = deposit_pl[1]
     deposit_pl[3] = calc_pl(pl_limits_arm[3][0], pl_limits_arm[3][1], 180)
     deposit_pl[4] = calc_pl(pl_limits_arm[4][0], pl_limits_arm[4][1], 140)
@@ -199,7 +200,7 @@ def position_gripper(target_vector):
     pl[0] = stationary_base_pl
     pl[1] = calc_pl(pl_limits_arm[1][0], pl_limits_arm[1][1], a[0])
     pl[2] = pl[1]
-    pl[3] = calc_pl(pl_limits_arm[3][0], pl_limits_arm[3][1], a[1])
+    pl[3] = calc_pl(pl_limits_arm[3][0], pl_limits_arm[3][1], (180 - a[1]))
     pl[4] = calc_pl(pl_limits_arm[4][0], pl_limits_arm[4][1], a[2])
     val = 1
 
