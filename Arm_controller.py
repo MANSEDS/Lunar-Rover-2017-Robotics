@@ -18,20 +18,29 @@ logging.basicConfig(filename='arm.log', level=logging.DEBUG)
 
 
 # System variables
+
+### Variables utilising Adafruit PWM hat
+## Channels
 channel_arm = [0, 1, 2, 3, 4] # Arm servo PWM channels
 channel_grip = [5, 6] # Gripper servo PWM channels
+## Pulse Length Limits
 pl_limits_arm = [[160, 600], [160, 750], [160, 750], [160, 600], [160, 600], [160, 600]] # Arm servo pl limits
 pl_limits_grip = [[160, 600], [160, 600]] # Gripper servo pulse length limits
 full_grip_pl = 300
 full_release_pl = 580
+### Variables using Pi GPIO
+## GPIO pins
+# pwm_arm = [0, 0, 0, 0, 0] # Arm servo PWM pins
+# pwm_grip = [0, 0] # Gripper servo PWM pins
+# dc_limits_arm = [[0, 13], [0, 13], [0, 13], [0, 13], [0, 13], [0, 13]] # Arm servo pl limits
+# dc_limits_grip = [[0, 13], [0, 13]] # Gripper servo pulse length limits
+## Duty Cycle Limits
+# full_grip_dc = 7 # Gripper dc at fully closed position
+# full_release_dc = 13 # Gripper dc at fully open position
+### Preset values
 stationary_base_pl = 410
 deposit_angles = [102, 140, 140, 180, 140, 5, 45]
-pwm_arm = [0, 0, 0, 0, 0] # Arm servo PWM pins
-pwm_grip = [0, 0] # Gripper servo PWM pins
-dc_limits_arm = [[0, 13], [0, 13], [0, 13], [0, 13], [0, 13], [0, 13]] # Arm servo pl limits
-dc_limits_grip = [[0, 13], [0, 13]] # Gripper servo pulse length limits
-full_grip_dc = 7 # Gripper dc at fully closed position
-full_release_dc = 13 # Gripper dc at fully open position
+# External filenames
 base_angle_data_filename = "base_angle.dat" # External file storing base angle value
 
 
@@ -141,7 +150,7 @@ def deposit_pos():
     deposit_pl[4] = calc_pl(pl_limits_arm[4][0], pl_limits_arm[4][1], 140)
     deposit_pl[5] = calc_pl(pl_limits_grip[0][0], pl_limits_grip[0][1], 5)
     deposit_pl[6] = calc_pl(pl_limits_grip[1][0], pl_limits_grip[1][1], 45)
-    
+
     # set base rotation to 0
     rotate_arm(0, 0, 0)
 
@@ -160,6 +169,7 @@ def deposit_pos():
 
 
 def position_gripper(target_vector):
+
     a = calc_servo_angles(target_vector)
     pl = [0, 0, 0, 0, 0]
     val = 1
