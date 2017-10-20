@@ -209,7 +209,6 @@ def position_gripper(target_vector):
         pwm.set_pwm(2, 0, pl[2])
         pwm.set_pwm(3, 0, pl[3])
         pwm.set_pwm(4, 0, pl[4])
-        pwm.set_pwm(5, 0, pl[5])
         if val == 1:
             logging.debug("Arm position command called for target vector: {}".format(target_vector))
             logging.debug("Calculated pulse lengths to achieve target vector: {}".format(pl))
