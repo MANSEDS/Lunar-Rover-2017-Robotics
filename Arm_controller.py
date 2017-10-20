@@ -85,7 +85,7 @@ def calc_servo_angles(target_vector):
     z = target_vector[1] + 145
     target_radius = sqrt(pow(r,2)+pow(z,2))
     logging.debug("r=%s, z=%s, target_radius=%s", r, z, target_radius)
-    if target_radius < max_radius:
+    if target_radius > max_radius:
         raise ValueError('Desired position exceeds reach!')
 
     # Inverse kinematics solver for 2 link arm
